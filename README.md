@@ -2,6 +2,10 @@
 
 This repository contains the Eyelash Sofle ZMK board module, user config, CI build matrix, and keymap drawing configuration.
 
+## Keymap
+
+<img src="keymap-drawer/eyelash_sofle.svg" >
+
 ## Prerequisites
 
 Install the base ZMK/Zephyr local build toolchain first:

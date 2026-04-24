@@ -1,0 +1,138 @@
+# Custom Dual-Display Scene Engine for `zmk-config`
+
+## Summary
+- Add a local, state-driven display engine to `zmk-config` without reintroducing donor runtime dependencies.
+- Keep the current stock `nice_view` artifacts untouched at first, and introduce a separate experimental custom-display path.
+- Use a fixed composition contract on both screens: a top status band plus a lower animation region, with asymmetric status priorities.
+- Share the same state model, scene-planning code, renderer-facing plan, and animation asset sources between firmware and the Ubuntu simulator so simulator output matches flashed behavior.
+
+## Implementation Changes
+- Extend [zephyr/module.yml](/home/bebski-pc/Documents/sofle_choc/zmk-config/zephyr/module.yml) so this repo is not only a `board_root` but also a real Zephyr module with root `CMakeLists.txt` and `Kconfig`. Keep `board_root: .`; add module-level CMake/Kconfig so shared display code can be built by firmware and simulator.
+- Add a local custom display shield under `boards/shields/eyelash_view/` as a thin fork/wrapper around the pinned ZMK `nice_view` shield. This shield owns the custom screen entrypoint and shield-specific Kconfig/CMake, but the actual engine lives outside the shield in shared repo-local code.
+- Keep stock artifacts in [build.yaml](/home/bebski-pc/Documents/sofle_choc/zmk-config/build.yaml) unchanged initially. Add new experimental artifacts only after Increment 1 is working:
+  - `eyelash_sofle_left_display_exp`
+  - `eyelash_sofle_right_display_exp`
+  - `eyelash_sofle_left_display_exp_debug`
+  - `eyelash_sofle_right_display_exp_debug`
+- Add a shared display code tree:
+  - `display/include/eyelash_display/` for public types and interfaces
+  - `display/core/` for pure state mapping, scene selection, side policy, and plan building
+  - `display/render/lvgl/` for the LVGL renderer adapter used by firmware and simulator
+  - `display/firmware/` for ZMK event listeners and state gathering
+  - `display/assets/placeholder/` for 1-bit placeholder frame sets and icon assets
+- Use a portrait logical layout contract for planning: `68x140` pixels, `16px` top bar, `124px` lower scene region. All scene planning uses this portrait coordinate system. Any LVGL rotation/orientation handling stays inside the renderer adapter, not the core logic.
+- Use asymmetric top-bar policy from the start:
+  - Left screen: local battery, charging state, host transport, split-link status
+  - Right screen: local battery, charging state, current layer mode, activity indicator
+  - Both screens: icon-first, text-light, fixed top band, lower region visually dominant
+- Keep the scene-selection hierarchy non-combinatorial:
+  - Primary: mode family (`base`, `lower`, `raise`, `adjust`, `sleep`)
+  - Secondary: activity bucket (`idle`, `low`, `medium`, `high`)
+  - Modifiers: charging, transport, split-link, battery bucket
+  - Sleep is a scene override for the lower region and suppresses normal animation advancement
+- Define the core public interfaces up front:
+  - `display_side_t { LEFT, RIGHT }`
+  - `display_mode_t { BASE, LOWER, RAISE, ADJUST, SLEEP }`
+  - `display_activity_bucket_t { IDLE, LOW, MEDIUM, HIGH }`
+  - `display_transport_t { NONE, USB, BLE }`
+  - `display_shared_state_t` containing mode, activity bucket, activity state, transport, split-link, local battery bucket, optional peer battery bucket, charging, and sleep state
+  - `status_bar_plan_t`, `scene_plan_t`, `screen_plan_t`
+  - `void eyelash_display_build_screen_plan(const display_shared_state_t *state, display_side_t side, screen_plan_t *out)`
+- Centralize all mappings in one place:
+  - layer index -> mode bucket
+  - WPM -> activity bucket
+  - battery percentage -> battery bucket
+  - `zmk_activity_state_changed` -> active/idle/sleep
+- Firmware-side state gathering should consume actual ZMK events, not ad-hoc polling:
+  - `zmk_layer_state_changed`
+  - `zmk_wpm_state_changed`
+  - `zmk_activity_state_changed`
+  - `zmk_battery_state_changed`
+  - `zmk_usb_conn_state_changed`
+  - `zmk_endpoint_changed`
+  - `zmk_split_peripheral_status_changed`
+  - `zmk_peripheral_battery_state_changed` when peer battery support is wired
+- Make the custom shield entrypoint thin. Its `zmk_display_status_screen()` implementation should create the screen and delegate all layout/render decisions to `display/render/lvgl/`, which itself consumes a `screen_plan_t`.
+- Keep placeholder assets first. Do not introduce meteor/moon/orbit final art yet. Add a small shared asset registry of simple monochrome scene families with multiple frames per mode and per activity bucket. These exact generated/image source files must be used by both firmware and simulator.
+- Add `sim/` as a self-contained host tool that reuses:
+  - the same `display/core/`
+  - the same `display/render/lvgl/`
+  - the same `display/assets/placeholder/`
+  - a host-only adapter for event injection, timing, and window/input management
+- Simulator behavior should be fixed and explicit:
+  - render both screens side by side by default
+  - show left/right using the same scene/asset sources as firmware
+  - support keyboard controls: `1/2/3/4` mode, `Q/W/E/R` activity bucket, `B/N` battery down/up, `C` charging toggle, `T` transport cycle, `L` split-link toggle, `S` active/idle/sleep cycle
+  - support a CLI flag to launch only `left`, only `right`, or `both`
+- Add repo docs after the first working experimental milestone:
+  - update `AGENTS.md` and `.agentic/context/repo-map.md` to include `display/`, `boards/shields/eyelash_view/`, and `sim/`
+  - add simulator build/run commands and experimental display artifact notes to `.agentic/commands.md`
+
+## Implementation Sequence
+- Increment 0: wire the repo for local display code ownership
+  - update `zephyr/module.yml`
+  - add root `CMakeLists.txt` and `Kconfig`
+  - add the empty `display/` and `sim/` structure
+  - add local `eyelash_view` shield skeleton, but do not switch any build artifacts yet
+- Increment 1: prove the custom shield path with no animation logic
+  - custom shield builds on both halves
+  - renderer shows a fixed `16px` top bar and a blank placeholder scene block
+  - add experimental left/right artifacts to `build.yaml`
+- Increment 2: land the pure shared core
+  - implement the shared enums, state struct, mapping functions, and `screen_plan_t`
+  - no real animation yet; only deterministic placeholder scene IDs and top-bar icon selection
+- Increment 3: wire firmware event adapters
+  - subscribe to the real ZMK events above
+  - log state transitions in the experimental debug builds only
+  - confirm side-aware left/right plans differ only where intended
+- Increment 4: add placeholder animation families and playback
+  - mode-based scene families
+  - activity-bucket frame selection/timing
+  - charging/split-link/transport modifiers in the top bar
+  - sleep override in the lower region
+- Increment 5: add the Ubuntu simulator
+  - host main loop
+  - keyboard controls
+  - both-screen preview
+  - same plan builder, renderer, and assets as firmware
+- Increment 6: stabilize and promote
+  - compare experimental firmware against simulator behavior
+  - only after the experimental path is stable, decide whether to replace the stock `nice_view` artifacts in a separate follow-up change
+
+## Test Plan
+- Structural validation:
+  - `make verify` still passes after adding module-level CMake/Kconfig, display directories, shield, and simulator docs
+  - `build.yaml`, `AGENTS.md`, and `.agentic/commands.md` remain aligned on stock vs experimental artifacts
+- Firmware build validation:
+  - stock left/right `nice_view` builds still succeed unchanged
+  - experimental left/right custom-display builds succeed
+  - experimental debug builds succeed with USB logging enabled
+- Plan/logic validation:
+  - layer changes only affect mode selection through the centralized mapping
+  - WPM changes only affect activity buckets through the centralized mapping
+  - sleep overrides lower-scene playback without mutating unrelated state mappings
+  - left and right top bars differ only by the chosen asymmetric policy
+- Simulator validation:
+  - simulator renders the same placeholder scene family and status icons as firmware for identical input state
+  - all simulator toggles change the expected plan deterministically
+  - left-only, right-only, and both-screen modes work
+- Hardware validation:
+  - experimental left/right flashes boot on hardware
+  - both displays render the fixed top-bar plus scene layout
+  - USB/BLE transport indicators match reality
+  - split-link indicator updates correctly
+  - sleep/idle behavior matches simulator expectations
+  - experimental debug artifacts produce useful runtime logs on each half
+- Exit criteria for this feature phase:
+  - experimental custom-display artifacts are stable on both halves
+  - simulator and flashed behavior match for the placeholder asset set
+  - no donor display repos are required at runtime
+  - final art generation remains explicitly out of scope until the placeholder engine is proven
+
+## Assumptions And Defaults
+- The custom display engine stays local to `zmk-config`; donor repos are reference-only.
+- The custom display path rolls out experimentally first and does not replace the current stock `nice_view` artifacts in this phase.
+- The shared core, renderer-facing plan, and animation asset sources are the canonical truth for both firmware and simulator.
+- The simulator is treated as a first-class development tool, not a disposable prototype.
+- Default simulator dependency choice: make it self-contained in `sim/` and avoid coupling its source layout to `.zmk`; system packages may be required for the host windowing backend, but the simulator’s display logic and asset sources live in this repo.
+- Final meteor/moon/orbit art is deferred until the placeholder engine, simulator parity, and hardware behavior are stable.

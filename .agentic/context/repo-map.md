@@ -5,7 +5,7 @@
 - `config/`
   User-config layer. Holds the pinned `west.yml`, keyboard runtime config, keymap, and JSON layout metadata used by ZMK tooling.
 - `build.yaml`
-  Canonical build matrix. Includes normal left/right nice!view builds, a Studio build, a settings-reset build, and left/right USB-logging debug builds.
+  Canonical build matrix. Includes normal left/right nice!view builds, a Studio build, settings-reset builds for both halves, and left/right USB-logging debug builds.
 - `.github/workflows/build.yml`
   GitHub Actions entrypoint. Kept pinned to the ZMK `v0.3` workflow.
 - `keymap_drawer.config.yaml`

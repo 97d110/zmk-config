@@ -14,11 +14,16 @@ include:
   - board: eyelash_sofle_left
     shield: settings_reset
     artifact-name: eyelash_sofle_left_settings_reset
+  - board: eyelash_sofle_right
+    shield: settings_reset
+    artifact-name: eyelash_sofle_right_settings_reset
   - board: eyelash_sofle_left
     shield: nice_view
-    snippet: zmk-usb-logging
-    artifact-name: eyelash_sofle_left_debug
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_USB_LOGGING=y -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
+    artifact-name: eyelash_sofle_left_studio_debug
   - board: eyelash_sofle_right
     shield: nice_view
     snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_ZMK_USB=y -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
     artifact-name: eyelash_sofle_right_debug

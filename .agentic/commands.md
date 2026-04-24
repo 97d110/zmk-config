@@ -82,7 +82,7 @@ west build -d build/right-debug -s zmk/app -b eyelash_sofle_right -S zmk-usb-log
 ## Flash And Debug Notes
 
 - Flash the left and right firmware to their matching halves.
-- For split pairing issues, flash both `eyelash_sofle_left_settings_reset` and `eyelash_sofle_right_settings_reset`, then flash normal firmware again.
+- For split pairing issues, flash both `eyelash_sofle_left_settings_reset` and `eyelash_sofle_right_settings_reset`, then flash normal firmware again. See `.agentic/troubleshooting/split-pairing.md`.
 - For runtime logs, flash the relevant `*_debug` artifact and open its USB CDC ACM serial device, for example:
 
 ```bash

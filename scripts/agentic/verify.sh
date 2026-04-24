@@ -12,6 +12,7 @@ required_files=(
   ".agentic/commands.md"
   ".agentic/tasks/TEMPLATE.md"
   ".agentic/checklists/change.md"
+  ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "config/west.yml"
   "config/eyelash_sofle.conf"
@@ -85,5 +86,7 @@ require_match 'CONFIG_ZMK_DISPLAY=y' 'boards/arm/eyelash_sofle/eyelash_sofle_lef
 require_match 'CONFIG_ZMK_DISPLAY=y' 'boards/arm/eyelash_sofle/eyelash_sofle_right_defconfig'
 require_match 'zephyr,console = &cdc_acm_uart' 'boards/arm/eyelash_sofle/eyelash_sofle.dtsi'
 require_match 'USB logging is enabled only through dedicated debug artifacts' 'AGENTS.md'
+require_match 'eyelash_sofle_right_settings_reset' '.agentic/troubleshooting/split-pairing.md'
+require_match 'central-only reset is incomplete' '.agentic/troubleshooting/split-pairing.md'
 
 printf 'verify: ok\n'

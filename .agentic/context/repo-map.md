@@ -14,6 +14,8 @@
   Generated output location for keymap diagrams and YAML exports.
 - `scripts/agentic/verify.sh`
   Cheap structural validation invoked by `make verify`.
+- `.agentic/troubleshooting/split-pairing.md`
+  Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 
 ## Ownership Boundaries
 

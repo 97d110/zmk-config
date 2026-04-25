@@ -15,6 +15,7 @@ required_files=(
   ".agentic/context/code-organization-convention.md"
   ".agentic/context/display-engine-logging-convention.md"
   ".agentic/context/display-engine-increment-1.md"
+  ".agentic/context/display-engine-increment-2.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -27,6 +28,8 @@ required_files=(
   "display/assets/README.md"
   "display/core/dual_display_plan.c"
   "display/core/dual_display_plan.h"
+  "display/core/dual_display_state.c"
+  "display/core/dual_display_state.h"
   "display/core/README.md"
   "display/log.h"
   "display/mock/README.md"
@@ -103,11 +106,20 @@ require_match 'module-str\s+=\s+zmk_dual_display' 'Kconfig'
 require_match 'CONFIG_NICE_VIEW_WIDGET_STATUS=n' 'config/eyelash_sofle.conf'
 require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
+require_match 'display/core/dual_display_state.c' 'CMakeLists.txt'
+require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/core/dual_display_plan.h'
+require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
+require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S' 'display/core/dual_display_state.h'
+require_match 'enum zmk_dual_display_activity_bucket activity' 'display/core/dual_display_plan.h'
+require_match 'zmk_dual_display_log_state_transition' 'display/core/dual_display_state.c'
+require_match 'mapped invalid battery percent' 'display/core/dual_display_state.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER' 'Kconfig'
 require_match 'display/mock/lvgl/placeholder_renderer.c' 'CMakeLists.txt'
 require_match 'display/render/lvgl/viewport.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'slash overlay' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
 require_no_match 'display/mock' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'Temporary placeholder drawings' 'display/assets/README.md'

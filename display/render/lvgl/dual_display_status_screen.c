@@ -28,10 +28,13 @@ static enum zmk_dual_display_side current_firmware_side(void) {
 
 lv_obj_t *zmk_display_status_screen(void) {
     const enum zmk_dual_display_side side = current_firmware_side();
+    struct zmk_dual_display_state state;
     struct zmk_dual_display_screen_plan plan;
 
     LOG_DBG("creating dual display status screen");
-    zmk_dual_display_build_screen_plan(side, &plan);
+    zmk_dual_display_default_state(side, &state);
+    zmk_dual_display_log_state_transition(NULL, &state);
+    zmk_dual_display_build_screen_plan_from_state(&state, &plan);
 
     lv_obj_t *screen = lv_obj_create(NULL);
     if (screen == NULL) {

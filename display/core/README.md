@@ -13,7 +13,7 @@ Allowed here:
   left/right edge as height,
 - side-aware screen-plan types,
 - status-bar and animation-region planning,
-- generic scene variants and future state buckets,
+- generic scene variants and state buckets,
 - mapping policy that can be shared by firmware and simulator.
 
 Not allowed here:

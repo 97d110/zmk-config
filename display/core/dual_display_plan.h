@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
+
+#include <display/core/dual_display_state.h>
 
 #define ZMK_DUAL_DISPLAY_SHORT_EDGE 68
 #define ZMK_DUAL_DISPLAY_LONG_EDGE 160
@@ -18,16 +19,30 @@
     (ZMK_DUAL_DISPLAY_HEIGHT - ZMK_DUAL_DISPLAY_STATUS_BAR_HEIGHT)
 #define ZMK_DUAL_DISPLAY_STATUS_SLOT_COUNT 3
 
-enum zmk_dual_display_side {
-    ZMK_DUAL_DISPLAY_SIDE_LEFT,
-    ZMK_DUAL_DISPLAY_SIDE_RIGHT,
-};
-
 enum zmk_dual_display_status_slot_kind {
     ZMK_DUAL_DISPLAY_STATUS_SLOT_BATTERY,
     ZMK_DUAL_DISPLAY_STATUS_SLOT_SPLIT_LINK,
     ZMK_DUAL_DISPLAY_STATUS_SLOT_TRANSPORT,
     ZMK_DUAL_DISPLAY_STATUS_SLOT_LAYER_MODE,
+};
+
+enum zmk_dual_display_status_slot_value {
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_UNKNOWN,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_0_10,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_11_50,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_51_100,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_0_10_CHARGING,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_11_50_CHARGING,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_51_100_CHARGING,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_SPLIT_CONNECTED,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_SPLIT_DISCONNECTED,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_TRANSPORT_USB,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_TRANSPORT_BT,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_TRANSPORT_DISCONNECTED,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_LAYER_TYPE,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_LAYER_SYMBOL,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_LAYER_MOD,
+    ZMK_DUAL_DISPLAY_STATUS_VALUE_LAYER_CONFIG,
 };
 
 enum zmk_dual_display_scene_variant {
@@ -44,8 +59,8 @@ struct zmk_dual_display_rect {
 
 struct zmk_dual_display_status_slot_plan {
     enum zmk_dual_display_status_slot_kind kind;
+    enum zmk_dual_display_status_slot_value value;
     struct zmk_dual_display_rect bounds;
-    bool active;
 };
 
 struct zmk_dual_display_status_bar_plan {
@@ -57,6 +72,7 @@ struct zmk_dual_display_status_bar_plan {
 struct zmk_dual_display_animation_plan {
     struct zmk_dual_display_rect bounds;
     enum zmk_dual_display_scene_variant variant;
+    enum zmk_dual_display_activity_bucket activity;
 };
 
 struct zmk_dual_display_screen_plan {
@@ -70,9 +86,14 @@ struct zmk_dual_display_dual_plan {
     struct zmk_dual_display_screen_plan right;
 };
 
-const char *zmk_dual_display_side_name(enum zmk_dual_display_side side);
+void zmk_dual_display_build_screen_plan_from_state(
+    const struct zmk_dual_display_state *state, struct zmk_dual_display_screen_plan *out_plan);
 
 void zmk_dual_display_build_screen_plan(enum zmk_dual_display_side side,
                                         struct zmk_dual_display_screen_plan *out_plan);
+
+void zmk_dual_display_build_dual_plan_from_state(
+    const struct zmk_dual_display_state *left_state,
+    const struct zmk_dual_display_state *right_state, struct zmk_dual_display_dual_plan *out_plan);
 
 void zmk_dual_display_build_dual_plan(struct zmk_dual_display_dual_plan *out_plan);

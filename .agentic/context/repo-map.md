@@ -22,9 +22,13 @@
   Required planning and coding boundary between durable product/core code and temporary/mock code, assets, fixtures, or scaffolding.
 - `.agentic/context/display-engine-increment-1.md`
   Handoff note for the first local dual nice!view renderer slice.
+- `.agentic/context/display-engine-increment-2.md`
+  Handoff note for the shared state model, state-aware status planning, and
+  placeholder status-value rendering.
 - `display/core/`
-  Durable LVGL-free display planning types and policy. The display contract is
-  portrait: top/bottom edges are short, left/right edges are long.
+  Durable LVGL-free display state, mapping, planning types, and policy. The
+  display contract is portrait: top/bottom edges are short, left/right edges
+  are long.
 - `display/render/lvgl/`
   Durable LVGL firmware adapter boundary, renderer contract, and viewport
   mapping. The current renderer contract is implemented by `display/mock/`.

@@ -32,6 +32,12 @@ static void clear_obj_defaults(lv_obj_t *obj) {
 }
 
 static void render_screen_plan(lv_obj_t *screen, const struct zmk_dual_display_screen_plan *plan) {
+    if (screen == NULL || plan == NULL) {
+        LOG_WRN("skipping render for missing screen plan input: screen=%p plan=%p",
+                (void *)screen, (const void *)plan);
+        return;
+    }
+
     LOG_DBG("rendering %s screen plan", zmk_dual_display_side_name(plan->side));
     zmk_dual_display_mock_lvgl_render_screen_plan(screen, plan);
 }
@@ -44,6 +50,11 @@ lv_obj_t *zmk_display_status_screen(void) {
     zmk_dual_display_build_screen_plan(side, &plan);
 
     lv_obj_t *screen = lv_obj_create(NULL);
+    if (screen == NULL) {
+        LOG_ERR("failed to create dual display status screen object");
+        return NULL;
+    }
+
     clear_obj_defaults(screen);
     lv_obj_set_size(screen, ZMK_DUAL_DISPLAY_WIDTH, ZMK_DUAL_DISPLAY_HEIGHT);
     lv_obj_set_style_bg_color(screen, lv_color_white(), LV_PART_MAIN);

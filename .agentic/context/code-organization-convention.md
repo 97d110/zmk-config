@@ -57,3 +57,5 @@ For the local dual nice!view display engine:
 - durable display assets belong under `display/assets/`,
 - temporary placeholder rendering and throwaway geometry belong under
   `display/mock/`.
+- all durable and temporary display layout code must preserve the physical
+  portrait contract: short top/bottom edges, long left/right edges.

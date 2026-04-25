@@ -9,6 +9,8 @@ assets are rendered.
 Allowed here:
 
 - geometry constants for the display contract,
+- the portrait display contract: short top/bottom edge as width and long
+  left/right edge as height,
 - side-aware screen-plan types,
 - status-bar and animation-region planning,
 - generic scene variants and future state buckets,

@@ -107,7 +107,13 @@ Both displays should follow this fixed structure:
 
 This means:
 
+- the physical display is a vertical/portrait rectangle
+- the top and bottom edges are the short edges
+- the left and right edges are the long edges
+- local engine coordinates should treat the short top edge as display width and
+  the long side edge as display height
 - top band reserved for status
+- the top status bar is spread across the narrow top edge
 - lower area reserved for animation or scene art
 - the animation region should remain visually dominant
 - side differences should be intentional
@@ -135,6 +141,7 @@ The right display should prioritize functionality-related values:
 
 - icon-first, not text-heavy
 - consistent geometry on both sides
+- fit the narrow portrait top edge; do not assume landscape status-bar width
 - side-specific contents are allowed
 - avoid wasting animation space on labels
 
@@ -307,6 +314,9 @@ Increment 0 audit result:
 - The left half is the split central through `CONFIG_ZMK_SPLIT_ROLE_CENTRAL default y` under `BOARD_EYELASH_SOFLE_LEFT`.
 - The local board DTS provides the upstream nice!view-required SPI node at `nice_view_spi: &spi0`, with SCK `P0.20`, MOSI `P0.17`, MISO `P0.25`, and CS `P0.6`.
 - The upstream ZMK `nice_view` shield overlay binds a Sharp LS0xx display at `160x68` and sets `zephyr,display = &nice_view`.
+- The installed Eyelash Sofle displays are physically portrait/vertical
+  rectangles. The local engine must plan them as short top/bottom edge by long
+  left/right edge, regardless of the upstream shield binding wording.
 - ZMK display init calls `zmk_display_status_screen()` and loads the returned LVGL screen.
 - Upstream `nice_view` currently provides a strong `zmk_display_status_screen()` via `custom_status_screen.c` when `CONFIG_NICE_VIEW_WIDGET_STATUS` is enabled.
 - A local LVGL renderer must avoid duplicate `zmk_display_status_screen()` definitions. The clean path is to disable the upstream `NICE_VIEW_WIDGET_STATUS` for scene-engine builds, then compile the local renderer as the status screen provider.
@@ -319,7 +329,8 @@ Increment 0 audit result:
 
 - create a minimal local dual-screen abstraction
 - render a placeholder top bar and placeholder animation region
-- placeholder geometry must read top-to-bottom: full-width status bar first, lower animation region second
+- placeholder geometry must read top-to-bottom on a portrait display:
+  short-edge status bar first, lower animation region second
 - side-specific placeholder variation must not make the display look like a left/right panel split
 - keep all mock placeholder drawing and throwaway asset logic under `display/mock/` so it can be replaced or deleted as a unit
 - keep `display/core/` free of mock asset names, LVGL objects, and temporary rendering details

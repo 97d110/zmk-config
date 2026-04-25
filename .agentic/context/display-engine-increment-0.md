@@ -44,6 +44,9 @@ This note captures the repo wiring discovered before adding the dual nice!view s
   - `width = <160>`
   - `height = <68>`
   - `zephyr,display = &nice_view`
+- The local Eyelash Sofle display engine treats the installed displays as
+  physical portrait rectangles: top and bottom edges are short, left and right
+  edges are long.
 - ZMK display init calls `zmk_display_status_screen()` and loads the returned LVGL screen.
 - Upstream `nice_view` currently supplies a strong `zmk_display_status_screen()` through `custom_status_screen.c` when `CONFIG_NICE_VIEW_WIDGET_STATUS` is enabled.
 

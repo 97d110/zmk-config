@@ -19,7 +19,8 @@ without rewriting the core.
 - `display/mock/` owns proof-of-concept drawing, mock icons, hard-coded
   placeholder geometry, and throwaway asset names.
 - Temporary code may be visually crude and hard-coded, but it must still follow
-  the top-to-bottom display contract and logging convention.
+  the portrait top-to-bottom display contract and logging convention. The top
+  and bottom edges are short, and the left and right edges are long.
 - Temporary code must not define the engine's public model. If a field or enum
   is needed by core planning, name it generically and keep it in `display/core/`.
 

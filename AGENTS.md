@@ -21,6 +21,7 @@ This repository is the primary ZMK config and board-module home for the Eyelash 
 - USB logging is enabled only through dedicated debug artifacts. Normal firmware builds should stay free of debug logging snippets.
 - When planning or writing code, follow `.agentic/context/code-organization-convention.md`: keep a pure distinction between durable product/core code and temporary/mock code, assets, fixtures, or scaffolding.
 - When adding or changing display-engine code under `display/`, follow `.agentic/context/display-engine-logging-convention.md` and update that convention if a new display subsystem needs different logging behavior.
+- Treat the nice!view displays as portrait rectangles: top and bottom edges are short, left and right edges are long. The top status bar must be laid out across the narrow top edge.
 - Treat `keymap-drawer/*.svg` and `keymap-drawer/*.yaml` as generated output if present. Update the source config first, then regenerate.
 - Avoid editing workspace dependencies such as `.zmk/`, `zmk/`, `modules/`, or `.west/`. This repo should stay focused on the local board module and user config.
 

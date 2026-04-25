@@ -7,6 +7,9 @@ validate the display contract before real scene assets, animation playback, and
 state-driven rendering exist. Code here may depend on LVGL primitives and simple
 hard-coded shapes because it is not the engine contract.
 
+The placeholder must follow the portrait display contract: the top and bottom
+edges are the short edges, and the left and right edges are the long edges.
+
 ## What Belongs Here
 
 - Placeholder rendering.

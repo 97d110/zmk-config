@@ -8,6 +8,12 @@
 #include <display/core/dual_display_plan.h>
 #include <display/log.h>
 
+#define ZMK_DUAL_DISPLAY_STATUS_SLOT_TOP 3
+#define ZMK_DUAL_DISPLAY_STATUS_SLOT_HEIGHT 8
+#define ZMK_DUAL_DISPLAY_STATUS_EDGE_MARGIN 4
+#define ZMK_DUAL_DISPLAY_STATUS_BATTERY_WIDTH 18
+#define ZMK_DUAL_DISPLAY_STATUS_ICON_WIDTH 12
+
 const char *zmk_dual_display_side_name(enum zmk_dual_display_side side) {
     switch (side) {
     case ZMK_DUAL_DISPLAY_SIDE_LEFT:
@@ -29,6 +35,14 @@ static struct zmk_dual_display_rect rect(uint8_t x, uint8_t y, uint8_t width, ui
     };
 }
 
+static uint8_t centered_status_slot_x(uint8_t width) {
+    return (ZMK_DUAL_DISPLAY_WIDTH - width) / 2;
+}
+
+static uint8_t trailing_status_slot_x(uint8_t width) {
+    return ZMK_DUAL_DISPLAY_WIDTH - ZMK_DUAL_DISPLAY_STATUS_EDGE_MARGIN - width;
+}
+
 static void build_status_bar_plan(enum zmk_dual_display_side side,
                                   struct zmk_dual_display_status_bar_plan *out_plan) {
     out_plan->bounds = rect(0, 0, ZMK_DUAL_DISPLAY_WIDTH, ZMK_DUAL_DISPLAY_STATUS_BAR_HEIGHT);
@@ -36,24 +50,30 @@ static void build_status_bar_plan(enum zmk_dual_display_side side,
 
     out_plan->slots[0] = (struct zmk_dual_display_status_slot_plan){
         .kind = ZMK_DUAL_DISPLAY_STATUS_SLOT_BATTERY,
-        .bounds = rect(6, 3, 18, 8),
+        .bounds = rect(ZMK_DUAL_DISPLAY_STATUS_EDGE_MARGIN, ZMK_DUAL_DISPLAY_STATUS_SLOT_TOP,
+                       ZMK_DUAL_DISPLAY_STATUS_BATTERY_WIDTH,
+                       ZMK_DUAL_DISPLAY_STATUS_SLOT_HEIGHT),
         .active = true,
     };
 
     out_plan->slots[1] = (struct zmk_dual_display_status_slot_plan){
         .kind = ZMK_DUAL_DISPLAY_STATUS_SLOT_SPLIT_LINK,
-        .bounds = rect(74, 3, 12, 8),
+        .bounds = rect(centered_status_slot_x(ZMK_DUAL_DISPLAY_STATUS_ICON_WIDTH),
+                       ZMK_DUAL_DISPLAY_STATUS_SLOT_TOP, ZMK_DUAL_DISPLAY_STATUS_ICON_WIDTH,
+                       ZMK_DUAL_DISPLAY_STATUS_SLOT_HEIGHT),
         .active = true,
     };
 
     out_plan->slots[2] = (struct zmk_dual_display_status_slot_plan){
         .kind = side == ZMK_DUAL_DISPLAY_SIDE_LEFT ? ZMK_DUAL_DISPLAY_STATUS_SLOT_TRANSPORT
                                                    : ZMK_DUAL_DISPLAY_STATUS_SLOT_LAYER_MODE,
-        .bounds = rect(140, 3, 12, 8),
+        .bounds = rect(trailing_status_slot_x(ZMK_DUAL_DISPLAY_STATUS_ICON_WIDTH),
+                       ZMK_DUAL_DISPLAY_STATUS_SLOT_TOP, ZMK_DUAL_DISPLAY_STATUS_ICON_WIDTH,
+                       ZMK_DUAL_DISPLAY_STATUS_SLOT_HEIGHT),
         .active = true,
     };
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("planned %s status bar: %u slots",
+    ZMK_DUAL_DISPLAY_LOG_DBG("planned %s portrait status bar on short top edge: %u slots",
                              zmk_dual_display_side_name(side),
                              (unsigned int)out_plan->slot_count);
 }

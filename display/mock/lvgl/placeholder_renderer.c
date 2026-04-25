@@ -28,6 +28,14 @@ static lv_obj_t *add_rect(lv_obj_t *parent, const struct zmk_dual_display_rect *
     return obj;
 }
 
+static uint8_t centered_in(uint8_t origin, uint8_t parent_size, uint8_t child_size) {
+    if (child_size >= parent_size) {
+        return origin;
+    }
+
+    return origin + ((parent_size - child_size) / 2);
+}
+
 static void render_status_slot(lv_obj_t *screen,
                                const struct zmk_dual_display_status_slot_plan *slot) {
     add_rect(screen, &slot->bounds, false);
@@ -57,9 +65,9 @@ static void render_status_bar(lv_obj_t *screen,
     }
 
     const struct zmk_dual_display_rect divider = {
-        .x = 0,
+        .x = plan->bounds.x,
         .y = plan->bounds.y + plan->bounds.height - 1,
-        .width = ZMK_DUAL_DISPLAY_WIDTH,
+        .width = plan->bounds.width,
         .height = 1,
     };
     add_rect(screen, &divider, true);
@@ -76,31 +84,35 @@ static void render_animation_region(lv_obj_t *screen,
     add_rect(screen, &plan->bounds, false);
 
     const bool secondary_variant = plan->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY;
-    const uint8_t cue_x = secondary_variant ? 136 : 18;
+    const uint8_t cue_x = secondary_variant ? plan->bounds.x + plan->bounds.width - 11
+                                            : plan->bounds.x + 5;
+    const uint8_t motion_band_width = plan->bounds.width - 20;
+    const uint8_t center_frame_width = plan->bounds.width - 30;
+    const uint8_t lower_motion_band_width = plan->bounds.width - 16;
 
     struct zmk_dual_display_rect upper_motion_band = {
-        .x = 42,
-        .y = plan->bounds.y + 8,
-        .width = 76,
+        .x = centered_in(plan->bounds.x, plan->bounds.width, motion_band_width),
+        .y = plan->bounds.y + 18,
+        .width = motion_band_width,
         .height = 8,
     };
     struct zmk_dual_display_rect center_frame = {
-        .x = 58,
-        .y = plan->bounds.y + 22,
-        .width = 44,
-        .height = 20,
+        .x = centered_in(plan->bounds.x, plan->bounds.width, center_frame_width),
+        .y = plan->bounds.y + 48,
+        .width = center_frame_width,
+        .height = 42,
     };
     struct zmk_dual_display_rect side_cue = {
         .x = cue_x,
-        .y = plan->bounds.y + 28,
+        .y = plan->bounds.y + 68,
         .width = 6,
         .height = 6,
     };
     struct zmk_dual_display_rect lower_motion_band = {
-        .x = 26,
-        .y = plan->bounds.y + plan->bounds.height - 9,
-        .width = 108,
-        .height = 3,
+        .x = centered_in(plan->bounds.x, plan->bounds.width, lower_motion_band_width),
+        .y = plan->bounds.y + plan->bounds.height - 20,
+        .width = lower_motion_band_width,
+        .height = 4,
     };
 
     add_rect(screen, &upper_motion_band, true);
@@ -108,7 +120,7 @@ static void render_animation_region(lv_obj_t *screen,
     add_rect(screen, &side_cue, true);
     add_rect(screen, &lower_motion_band, true);
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendered top-down animation placeholder variant=%d",
+    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendered portrait animation placeholder variant=%d",
                              plan->variant);
 }
 

@@ -12,12 +12,20 @@ required_files=(
   ".agentic/commands.md"
   ".agentic/tasks/TEMPLATE.md"
   ".agentic/checklists/change.md"
+  ".agentic/context/display-engine-logging-convention.md"
+  ".agentic/context/display-engine-increment-1.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
+  "CMakeLists.txt"
+  "Kconfig"
   "config/west.yml"
   "config/eyelash_sofle.conf"
   "config/eyelash_sofle.keymap"
   "config/eyelash_sofle.json"
+  "display/core/dual_display_plan.c"
+  "display/core/dual_display_plan.h"
+  "display/log.h"
+  "display/render/lvgl/dual_display_status_screen.c"
   "boards/arm/eyelash_sofle/Kconfig.board"
   "boards/arm/eyelash_sofle/Kconfig.defconfig"
   "boards/arm/eyelash_sofle/board.cmake"
@@ -73,6 +81,18 @@ require_match 'snippet:\s+studio-rpc-usb-uart' 'build.yaml'
 require_match 'snippet:\s+zmk-usb-logging' 'build.yaml'
 require_match 'CONFIG_ZMK_USB_LOGGING=y' 'build.yaml'
 require_match 'CONFIG_ZMK_USB=y' 'build.yaml'
+
+require_match 'cmake:\s+\.' 'zephyr/module.yml'
+require_match 'kconfig:\s+Kconfig' 'zephyr/module.yml'
+require_match 'board_root:\s+\.' 'zephyr/module.yml'
+require_match 'CONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE' 'CMakeLists.txt'
+require_match 'SHIELD_NICE_VIEW' 'Kconfig'
+require_match 'ZMK_DISPLAY' 'Kconfig'
+require_match 'module-str\s+=\s+zmk_dual_display' 'Kconfig'
+require_match 'CONFIG_NICE_VIEW_WIDGET_STATUS=n' 'config/eyelash_sofle.conf'
+require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
+require_match 'display-engine-logging-convention\.md' 'AGENTS.md'
 
 require_match 'name:\s+zmk' 'config/west.yml'
 require_match 'revision:\s+v0\.3' 'config/west.yml'

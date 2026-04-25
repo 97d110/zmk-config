@@ -267,6 +267,13 @@ It should exercise the same state structure mentioned earlier for the core logic
 
 Proceed in small, reversible increments.
 
+### Logging convention for increments 1-7
+
+- All display-engine code changes must follow `.agentic/context/display-engine-logging-convention.md`.
+- Add debug-level diagnostics for new state mapping, planning, rendering, simulator, firmware adapter, and timing logic.
+- Keep normal firmware artifacts free of debug logging snippets or elevated log settings; use the dedicated debug artifacts to view runtime logs.
+- Update the logging convention in the same change if a future subsystem needs different logging behavior.
+
 ### Increment 0
 
 - inspect current repo wiring
@@ -301,36 +308,43 @@ Increment 0 audit result:
 - create a minimal local dual-screen abstraction
 - render a placeholder top bar and placeholder animation region
 - keep behavior simple and reversible
+- establish the display-engine logging convention and add debug-level trace points in the new planning/rendering logic
 
 ### Increment 2
 
 - add the shared state model
 - add centralized mapping logic
 - add lightweight state-transition debug support
+- follow the logging convention for state capture, mapping decisions, and recoverable fallbacks
 
 ### Increment 3
 
 - add scene planning and placeholder animations
 - switch visuals by mode and activity bucket
+- follow the logging convention for scene selection and animation placeholder changes
 
 ### Increment 4
 
 - add the Ubuntu simulator
 - verify manual state switching for both screens
+- make simulator diagnostics consistent with the logging convention without forking core logic
 
 ### Increment 5
 
 - wire the real ZMK state/event sources
 - make firmware behavior match simulator behavior
+- follow the logging convention for ZMK event adapters, state updates, and ignored/no-op events
 
 ### Increment 6
 
 - refine per-side top-bar responsibilities
 - refine timing and placeholder animation behavior
+- follow the logging convention for timing decisions while avoiding unconditional per-frame hot-path logs
 
 ### Increment 7
 
 - only after the generic engine is proven, define the final meteor-theme asset pipeline
+- follow the logging convention for asset registry/pipeline decisions without using final-art-specific logic names
 
 ## Constraints
 

@@ -1,0 +1,24 @@
+# Copyright (c) 2026 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+menu "Eyelash Sofle display engine"
+
+config ZMK_DUAL_DISPLAY_SCENE_ENGINE
+    bool "Local dual nice!view scene engine"
+    default y
+    depends on ZMK_DISPLAY
+    depends on SHIELD_NICE_VIEW
+    help
+      Enables the local dual-display scene engine for the Eyelash Sofle
+      nice!view builds. The engine provides the custom ZMK display status
+      screen and keeps display planning local to this repository.
+
+if ZMK_DUAL_DISPLAY_SCENE_ENGINE
+
+module = ZMK_DUAL_DISPLAY_SCENE_ENGINE
+module-str = zmk_dual_display
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # ZMK_DUAL_DISPLAY_SCENE_ENGINE
+
+endmenu

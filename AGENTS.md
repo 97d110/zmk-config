@@ -19,6 +19,7 @@ This repository is the primary ZMK config and board-module home for the Eyelash 
 - Keep `config/west.yml` minimal and pinned to `v0.3`. Do not add donor display repos as runtime dependencies.
 - When changing hardware behavior, inspect both the board files under `boards/arm/eyelash_sofle/` and the runtime config under `config/`.
 - USB logging is enabled only through dedicated debug artifacts. Normal firmware builds should stay free of debug logging snippets.
+- When adding or changing display-engine code under `display/`, follow `.agentic/context/display-engine-logging-convention.md` and update that convention if a new display subsystem needs different logging behavior.
 - Treat `keymap-drawer/*.svg` and `keymap-drawer/*.yaml` as generated output if present. Update the source config first, then regenerate.
 - Avoid editing workspace dependencies such as `.zmk/`, `zmk/`, `modules/`, or `.west/`. This repo should stay focused on the local board module and user config.
 

@@ -56,7 +56,7 @@ lv_obj_t *zmk_display_status_screen(void) {
     }
 
     clear_obj_defaults(screen);
-    lv_obj_set_size(screen, ZMK_DUAL_DISPLAY_WIDTH, ZMK_DUAL_DISPLAY_HEIGHT);
+    lv_obj_set_size(screen, ZMK_DUAL_DISPLAY_LONG_EDGE, ZMK_DUAL_DISPLAY_SHORT_EDGE);
     lv_obj_set_style_bg_color(screen, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, LV_PART_MAIN);
 

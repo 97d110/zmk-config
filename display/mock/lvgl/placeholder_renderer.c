@@ -13,13 +13,25 @@ static void clear_obj_defaults(lv_obj_t *obj) {
     lv_obj_set_style_radius(obj, 0, LV_PART_MAIN);
 }
 
+/* Map the portrait plan onto the nice!view panel's landscape framebuffer. */
+static struct zmk_dual_display_rect logical_to_panel_rect(
+    const struct zmk_dual_display_rect *bounds) {
+    return (struct zmk_dual_display_rect){
+        .x = bounds->y,
+        .y = ZMK_DUAL_DISPLAY_WIDTH - bounds->x - bounds->width,
+        .width = bounds->height,
+        .height = bounds->width,
+    };
+}
+
 static lv_obj_t *add_rect(lv_obj_t *parent, const struct zmk_dual_display_rect *bounds,
                           bool filled) {
+    const struct zmk_dual_display_rect physical_bounds = logical_to_panel_rect(bounds);
     lv_obj_t *obj = lv_obj_create(parent);
 
     clear_obj_defaults(obj);
-    lv_obj_set_pos(obj, bounds->x, bounds->y);
-    lv_obj_set_size(obj, bounds->width, bounds->height);
+    lv_obj_set_pos(obj, physical_bounds.x, physical_bounds.y);
+    lv_obj_set_size(obj, physical_bounds.width, physical_bounds.height);
     lv_obj_set_style_border_width(obj, 1, LV_PART_MAIN);
     lv_obj_set_style_border_color(obj, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_bg_color(obj, lv_color_black(), LV_PART_MAIN);

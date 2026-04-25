@@ -1,8 +1,10 @@
-# Display Placeholder Assets
+# Display Assets
 
-Increment 1 uses logic-named placeholder asset identifiers only. The placeholder
-scene must read top-to-bottom: full-width status bar first, lower animation
-region second.
+This folder is reserved for durable display assets and registries that should
+survive beyond the proof-of-concept renderer.
+
+Temporary placeholder drawings, mock asset identifiers, and throwaway geometry
+belong under `display/mock/` so they can be replaced or deleted as a unit.
 
 Do not add final art, donor assets, or style-specific naming here until the
 generic scene engine is proven in later increments.

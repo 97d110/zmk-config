@@ -11,6 +11,7 @@ Add the first local dual nice!view renderer slice, plus a repo-level logging con
   - top status bar,
   - lower placeholder animation region,
   - visibly distinct side variants that still read as a top-to-bottom layout.
+- Keep temporary placeholder drawing under `display/mock/` and keep `display/core/` free of throwaway asset names.
 - Add logging throughout new logic:
   - `LOG_MODULE_REGISTER(zmk_dual_display, CONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_LOG_LEVEL)` in firmware/LVGL code.
   - `LOG_DBG` for init, plan construction, side selection, render refresh, geometry decisions, and placeholder asset selection.

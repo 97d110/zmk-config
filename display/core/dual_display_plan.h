@@ -8,8 +8,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <display/assets/placeholder_assets.h>
-
 #define ZMK_DUAL_DISPLAY_WIDTH 160
 #define ZMK_DUAL_DISPLAY_HEIGHT 68
 #define ZMK_DUAL_DISPLAY_STATUS_BAR_HEIGHT 14
@@ -28,6 +26,11 @@ enum zmk_dual_display_status_slot_kind {
     ZMK_DUAL_DISPLAY_STATUS_SLOT_SPLIT_LINK,
     ZMK_DUAL_DISPLAY_STATUS_SLOT_TRANSPORT,
     ZMK_DUAL_DISPLAY_STATUS_SLOT_LAYER_MODE,
+};
+
+enum zmk_dual_display_scene_variant {
+    ZMK_DUAL_DISPLAY_SCENE_VARIANT_PRIMARY,
+    ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY,
 };
 
 struct zmk_dual_display_rect {
@@ -51,8 +54,7 @@ struct zmk_dual_display_status_bar_plan {
 
 struct zmk_dual_display_animation_plan {
     struct zmk_dual_display_rect bounds;
-    enum zmk_dual_display_placeholder_asset asset;
-    bool use_alternate_side_variant;
+    enum zmk_dual_display_scene_variant variant;
 };
 
 struct zmk_dual_display_screen_plan {

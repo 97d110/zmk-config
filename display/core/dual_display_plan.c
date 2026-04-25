@@ -62,15 +62,12 @@ static void build_animation_plan(enum zmk_dual_display_side side,
                                  struct zmk_dual_display_animation_plan *out_plan) {
     out_plan->bounds = rect(0, ZMK_DUAL_DISPLAY_ANIMATION_Y, ZMK_DUAL_DISPLAY_WIDTH,
                             ZMK_DUAL_DISPLAY_ANIMATION_HEIGHT);
-    out_plan->use_alternate_side_variant = side == ZMK_DUAL_DISPLAY_SIDE_RIGHT;
-    out_plan->asset = out_plan->use_alternate_side_variant
-                          ? ZMK_DUAL_DISPLAY_PLACEHOLDER_ASSET_STACKED_SCENE_ALT
-                          : ZMK_DUAL_DISPLAY_PLACEHOLDER_ASSET_STACKED_SCENE;
+    out_plan->variant = side == ZMK_DUAL_DISPLAY_SIDE_RIGHT
+                            ? ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY
+                            : ZMK_DUAL_DISPLAY_SCENE_VARIANT_PRIMARY;
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("planned %s animation: asset=%d alternate_variant=%d "
-                             "bounds=%ux%u+%u+%u",
-                             zmk_dual_display_side_name(side), out_plan->asset,
-                             out_plan->use_alternate_side_variant,
+    ZMK_DUAL_DISPLAY_LOG_DBG("planned %s animation: variant=%d bounds=%ux%u+%u+%u",
+                             zmk_dual_display_side_name(side), out_plan->variant,
                              (unsigned int)out_plan->bounds.width,
                              (unsigned int)out_plan->bounds.height,
                              (unsigned int)out_plan->bounds.x, (unsigned int)out_plan->bounds.y);

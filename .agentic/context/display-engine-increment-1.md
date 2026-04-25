@@ -13,11 +13,15 @@ Increment 1 adds the first local dual nice!view renderer slice.
   symbol.
 - Added minimal LVGL-free core planning under `display/core/`.
 - Added a local LVGL status-screen provider under `display/render/lvgl/`.
-- Added placeholder asset identifiers under `display/assets/`.
+- Moved temporary placeholder geometry and mock drawing under `display/mock/`.
+  The core no longer references placeholder asset identifiers.
 - Corrected the placeholder geometry to read top-to-bottom: full-width status
   bar first, lower animation region second. Side-specific variation is limited
   to a small cue inside the lower region and should not create a left/right
   panel split.
+- Documented the boundary between durable core logic and temporary mock logic in
+  `display/README.md`, `display/core/README.md`, `display/render/lvgl/README.md`,
+  and `display/mock/README.md`.
 - Added the display-engine logging convention and AGENTS rule.
 
 ## Logging

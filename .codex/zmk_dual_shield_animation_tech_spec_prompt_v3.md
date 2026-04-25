@@ -221,8 +221,12 @@ Suggested structure:
   - animation playback
   - object lifecycle
 - `display/assets/`
-  - placeholder frame sets
-  - asset registry
+  - durable asset registry
+  - long-lived frame sets after the generic engine is proven
+- `display/mock/`
+  - temporary placeholder rendering
+  - mock icon/scene geometry
+  - throwaway proof-of-concept asset logic
 - `display/firmware/`
   - ZMK-facing state adapters
   - event listeners
@@ -275,6 +279,13 @@ Proceed in small, reversible increments.
 - Keep normal firmware artifacts free of debug logging snippets or elevated log settings; use the dedicated debug artifacts to view runtime logs.
 - Update the logging convention in the same change if a future subsystem needs different logging behavior.
 
+### Code organization convention for increments 1-7
+
+- All planning and code changes must follow `.agentic/context/code-organization-convention.md`.
+- Plans must explicitly distinguish durable engine logic/assets from temporary mock logic/assets.
+- Keep `display/core/` generic and free of mock-only naming, placeholder asset IDs, final art style names, and LVGL object details.
+- Keep throwaway placeholders, mock icon geometry, and proof-of-concept asset logic under `display/mock/` so they can be replaced or deleted as a unit.
+
 ### Increment 0
 
 - inspect current repo wiring
@@ -310,6 +321,8 @@ Increment 0 audit result:
 - render a placeholder top bar and placeholder animation region
 - placeholder geometry must read top-to-bottom: full-width status bar first, lower animation region second
 - side-specific placeholder variation must not make the display look like a left/right panel split
+- keep all mock placeholder drawing and throwaway asset logic under `display/mock/` so it can be replaced or deleted as a unit
+- keep `display/core/` free of mock asset names, LVGL objects, and temporary rendering details
 - keep behavior simple and reversible
 - establish the display-engine logging convention and add debug-level trace points in the new planning/rendering logic
 

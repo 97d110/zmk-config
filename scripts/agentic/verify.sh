@@ -12,6 +12,7 @@ required_files=(
   ".agentic/commands.md"
   ".agentic/tasks/TEMPLATE.md"
   ".agentic/checklists/change.md"
+  ".agentic/context/code-organization-convention.md"
   ".agentic/context/display-engine-logging-convention.md"
   ".agentic/context/display-engine-increment-1.md"
   ".agentic/troubleshooting/split-pairing.md"
@@ -22,9 +23,16 @@ required_files=(
   "config/eyelash_sofle.conf"
   "config/eyelash_sofle.keymap"
   "config/eyelash_sofle.json"
+  "display/README.md"
+  "display/assets/README.md"
   "display/core/dual_display_plan.c"
   "display/core/dual_display_plan.h"
+  "display/core/README.md"
   "display/log.h"
+  "display/mock/README.md"
+  "display/mock/lvgl/placeholder_renderer.c"
+  "display/mock/lvgl/placeholder_renderer.h"
+  "display/render/lvgl/README.md"
   "display/render/lvgl/dual_display_status_screen.c"
   "boards/arm/eyelash_sofle/Kconfig.board"
   "boards/arm/eyelash_sofle/Kconfig.defconfig"
@@ -92,6 +100,13 @@ require_match 'module-str\s+=\s+zmk_dual_display' 'Kconfig'
 require_match 'CONFIG_NICE_VIEW_WIDGET_STATUS=n' 'config/eyelash_sofle.conf'
 require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
+require_match 'display/mock/lvgl/placeholder_renderer.c' 'CMakeLists.txt'
+require_match 'zmk_dual_display_mock_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'Temporary placeholder drawings' 'display/assets/README.md'
+require_match 'This subtree is temporary by design' 'display/mock/README.md'
+require_match 'code-organization-convention\.md' 'AGENTS.md'
+require_match 'durable product/core code and temporary/mock code' 'AGENTS.md'
+require_match 'Code organization convention for increments 1-7' '.codex/zmk_dual_shield_animation_tech_spec_prompt_v3.md'
 require_match 'display-engine-logging-convention\.md' 'AGENTS.md'
 
 require_match 'name:\s+zmk' 'config/west.yml'

@@ -9,7 +9,8 @@ without rewriting the core.
 - `display/core/` owns LVGL-free contracts: display dimensions, side identity,
   status slot plans, animation-region plans, and generic scene variants.
 - `display/render/lvgl/` owns the firmware LVGL adapter boundary and the ZMK
-  `zmk_display_status_screen()` entry point.
+  `zmk_display_status_screen()` entry point, renderer contract, and viewport
+  mapping.
 - `display/firmware/` will own future ZMK event/state adapters.
 - `display/assets/` is reserved for durable asset registries and final or
   long-lived placeholder assets after the generic engine is proven.
@@ -27,6 +28,6 @@ without rewriting the core.
 ## Deletion Rule
 
 Before moving to real assets or animation playback, the implementation should
-be able to delete `display/mock/` and replace its single renderer call with a
-real renderer. If that is not possible, mock-only logic has leaked into durable
-code and should be moved back behind the mock boundary.
+be able to delete `display/mock/` and replace its implementation of the LVGL
+renderer contract with a real renderer. If that is not possible, mock-only logic
+has leaked into durable code and should be moved back behind the mock boundary.

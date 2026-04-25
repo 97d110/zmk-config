@@ -6,32 +6,19 @@
 #include <display/mock/lvgl/placeholder_renderer.h>
 
 #include <display/log.h>
-
-static void clear_obj_defaults(lv_obj_t *obj) {
-    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_pad_all(obj, 0, LV_PART_MAIN);
-    lv_obj_set_style_radius(obj, 0, LV_PART_MAIN);
-}
-
-/* Map the portrait plan onto the nice!view panel's landscape framebuffer. */
-static struct zmk_dual_display_rect logical_to_panel_rect(
-    const struct zmk_dual_display_rect *bounds) {
-    return (struct zmk_dual_display_rect){
-        .x = bounds->y,
-        .y = ZMK_DUAL_DISPLAY_WIDTH - bounds->x - bounds->width,
-        .width = bounds->height,
-        .height = bounds->width,
-    };
-}
+#include <display/render/lvgl/viewport.h>
 
 static lv_obj_t *add_rect(lv_obj_t *parent, const struct zmk_dual_display_rect *bounds,
                           bool filled) {
-    const struct zmk_dual_display_rect physical_bounds = logical_to_panel_rect(bounds);
     lv_obj_t *obj = lv_obj_create(parent);
 
-    clear_obj_defaults(obj);
-    lv_obj_set_pos(obj, physical_bounds.x, physical_bounds.y);
-    lv_obj_set_size(obj, physical_bounds.width, physical_bounds.height);
+    if (obj == NULL) {
+        ZMK_DUAL_DISPLAY_LOG_WRN("mock failed to create placeholder rectangle");
+        return NULL;
+    }
+
+    zmk_dual_display_lvgl_reset_obj(obj);
+    zmk_dual_display_lvgl_apply_rect(obj, bounds);
     lv_obj_set_style_border_width(obj, 1, LV_PART_MAIN);
     lv_obj_set_style_border_color(obj, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_bg_color(obj, lv_color_black(), LV_PART_MAIN);
@@ -136,8 +123,14 @@ static void render_animation_region(lv_obj_t *screen,
                              plan->variant);
 }
 
-void zmk_dual_display_mock_lvgl_render_screen_plan(
+void zmk_dual_display_lvgl_render_screen_plan(
     lv_obj_t *screen, const struct zmk_dual_display_screen_plan *plan) {
+    if (screen == NULL || plan == NULL) {
+        ZMK_DUAL_DISPLAY_LOG_WRN("mock skipped render for missing input: screen=%p plan=%p",
+                                 (void *)screen, (const void *)plan);
+        return;
+    }
+
     ZMK_DUAL_DISPLAY_LOG_DBG("mock rendering %s placeholder screen plan",
                              zmk_dual_display_side_name(plan->side));
     render_status_bar(screen, &plan->status_bar);

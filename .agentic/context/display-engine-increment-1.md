@@ -13,7 +13,11 @@ Increment 1 adds the first local dual nice!view renderer slice.
   symbol.
 - Added minimal LVGL-free core planning under `display/core/`.
 - Added a local LVGL status-screen provider under `display/render/lvgl/`.
+- Added a durable LVGL renderer contract and viewport mapping under
+  `display/render/lvgl/`.
 - Moved temporary placeholder geometry and mock drawing under `display/mock/`.
+  The mock renderer implements the durable LVGL contract, and the firmware
+  status-screen provider no longer includes mock headers directly.
   The core no longer references placeholder asset identifiers.
 - Corrected the placeholder geometry to read top-to-bottom: short-edge status
   bar first, lower animation region second. The display contract is portrait,

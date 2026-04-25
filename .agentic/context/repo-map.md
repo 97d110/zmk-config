@@ -26,7 +26,8 @@
   Durable LVGL-free display planning types and policy. The display contract is
   portrait: top/bottom edges are short, left/right edges are long.
 - `display/render/lvgl/`
-  Durable LVGL firmware adapter boundary. Temporary placeholder drawing is delegated to `display/mock/`.
+  Durable LVGL firmware adapter boundary, renderer contract, and viewport
+  mapping. The current renderer contract is implemented by `display/mock/`.
 - `display/mock/`
   Temporary proof-of-concept placeholder rendering. It must preserve the
   portrait display contract and should be easy to replace or delete.

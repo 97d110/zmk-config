@@ -33,7 +33,10 @@ required_files=(
   "display/mock/lvgl/placeholder_renderer.c"
   "display/mock/lvgl/placeholder_renderer.h"
   "display/render/lvgl/README.md"
+  "display/render/lvgl/screen_renderer.h"
   "display/render/lvgl/dual_display_status_screen.c"
+  "display/render/lvgl/viewport.c"
+  "display/render/lvgl/viewport.h"
   "boards/arm/eyelash_sofle/Kconfig.board"
   "boards/arm/eyelash_sofle/Kconfig.defconfig"
   "boards/arm/eyelash_sofle/board.cmake"
@@ -100,8 +103,13 @@ require_match 'module-str\s+=\s+zmk_dual_display' 'Kconfig'
 require_match 'CONFIG_NICE_VIEW_WIDGET_STATUS=n' 'config/eyelash_sofle.conf'
 require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
+require_match 'ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER' 'Kconfig'
 require_match 'display/mock/lvgl/placeholder_renderer.c' 'CMakeLists.txt'
-require_match 'zmk_dual_display_mock_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'display/render/lvgl/viewport.c' 'CMakeLists.txt'
+require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
+require_no_match 'display/mock' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'Temporary placeholder drawings' 'display/assets/README.md'
 require_match 'This subtree is temporary by design' 'display/mock/README.md'
 require_match 'code-organization-convention\.md' 'AGENTS.md'

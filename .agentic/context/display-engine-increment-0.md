@@ -59,7 +59,8 @@ Keep the dual-display engine local to this repo:
 - `display/firmware/`
   ZMK-facing state adapters, event listeners, and optional debug helpers.
 - `display/render/lvgl/`
-  LVGL adapter that consumes the core plan and provides the firmware status screen entry point.
+  LVGL adapter that consumes the core plan, provides the firmware status screen
+  entry point, and owns the renderer contract plus viewport mapping.
 - `display/assets/`
   Placeholder frame sets and asset registry.
 - `sim/`

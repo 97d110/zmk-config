@@ -40,8 +40,9 @@ The engine must:
 
 Do **not**:
 
-- start with final meteor art
-- depend on `mario-peripheral-animation`, `nice-view-gem`, or `zmk-nice-oled` as runtime modules
+- Generate anything related to the final art.
+- Do not use art style related variable names, keep with logic and component related naming conventions.
+- depend on `mario-peripheral-animation`, `nice-view-gem`, or `zmk-nice-oled` as runtime modules.
 - replace the working board/config structure with a giant rewrite
 - break existing normal, Studio, settings-reset, or debug artifact flows
 
@@ -141,20 +142,19 @@ The right display should prioritize functionality-related values:
 
 Create a generic state model that can express at least:
 
-- side / role
+- side
+- role
 - current layer bucket or mode
-- typing activity / WPM bucket
+- typing activity bucket
 - battery bucket
-- charging state
 - USB / BLE / disconnected transport state if relevant
 - split-link state for the other half
-- display idle / sleep state
 
 Centralize these mappings in one place:
 
 - layer -> mode
-- WPM -> activity bucket
-- battery percentage -> battery bucket
+- Time typing length (For how long I'm typing on the keyboard.) and idle sleep states -> typing activity bucket
+- battery percentage and charging status and state -> battery bucket
 
 The exact names can change, but the model should resemble:
 
@@ -164,8 +164,6 @@ typedef struct {
     bool other_half_connected;
     bool usb_active;
     bool ble_active;
-    bool charging;
-    bool sleeping;
     uint8_t battery_bucket;
     uint8_t layer_mode;
     uint8_t activity_bucket;
@@ -263,15 +261,7 @@ It should:
 - allow manual state changes
 - validate the fixed top-bar plus animation-region contract
 
-It should exercise:
-
-- layer changes
-- WPM/activity bucket changes
-- charging
-- battery bucket
-- split-link state
-- USB/BLE/disconnected state if represented
-- sleep/idle state
+It should exercise the same state structure mentioned earlier for the core logic.
 
 ## Increment Strategy
 

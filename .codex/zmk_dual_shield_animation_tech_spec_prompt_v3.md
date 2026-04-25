@@ -260,6 +260,7 @@ It should:
 - share the same core logic as firmware
 - allow manual state changes
 - validate the fixed top-bar plus animation-region contract
+- display the dual-display scene-engine logs while simulator state changes and rendering decisions occur
 
 It should exercise the same state structure mentioned earlier for the core logic.
 
@@ -328,6 +329,7 @@ Increment 0 audit result:
 - add the Ubuntu simulator
 - verify manual state switching for both screens
 - make simulator diagnostics consistent with the logging convention without forking core logic
+- show the `zmk_dual_display` scene-engine logs in the simulator UI or adjacent simulator console output
 
 ### Increment 5
 

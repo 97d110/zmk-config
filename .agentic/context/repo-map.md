@@ -14,6 +14,8 @@
   Generated output location for keymap diagrams and YAML exports.
 - `scripts/agentic/verify.sh`
   Cheap structural validation invoked by `make verify`.
+- `.agentic/context/display-engine-increment-0.md`
+  Audit of the current nice!view display path, build/debug implications, and local insertion points for the dual-display scene engine.
 - `.agentic/troubleshooting/split-pairing.md`
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 
@@ -24,3 +26,4 @@
 - Build matrix and artifact naming belong in `build.yaml`.
 - Debug logging policy belongs in `build.yaml` and `.agentic/commands.md`.
 - Future local display-engine work should stay local to this repo and must not reintroduce donor repos as runtime dependencies.
+- The planned display-engine boundary is `display/core/`, `display/firmware/`, `display/render/lvgl/`, `display/assets/`, and `sim/`; see `context/display-engine-increment-0.md` before changing display wiring.

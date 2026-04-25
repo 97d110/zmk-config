@@ -274,6 +274,28 @@ Proceed in small, reversible increments.
 - verify how the existing `nice_view` path is reached
 - confirm build-contract and debug-artifact implications
 
+Increment 0 audit result:
+
+- No engine code was added and no release-contract files were changed during the audit.
+- `build.yaml` remains the release contract:
+  - normal left and right artifacts use `shield: nice_view`
+  - the Studio artifact uses `shield: nice_view` plus `studio-rpc-usb-uart`
+  - settings-reset artifacts use `shield: settings_reset`
+  - debug artifacts are dedicated `nice_view` builds with explicit USB logging snippets/CMake args
+- `config/west.yml` remains minimal and pinned to ZMK `v0.3`; donor display repos are not present and must not be added as runtime dependencies.
+- This repo is made available to Zephyr as a local board root through `zephyr/module.yml` with `build.settings.board_root: .`.
+- Both halves enable ZMK display support in their board defconfigs with `CONFIG_ZMK_DISPLAY=y`.
+- The left half is the split central through `CONFIG_ZMK_SPLIT_ROLE_CENTRAL default y` under `BOARD_EYELASH_SOFLE_LEFT`.
+- The local board DTS provides the upstream nice!view-required SPI node at `nice_view_spi: &spi0`, with SCK `P0.20`, MOSI `P0.17`, MISO `P0.25`, and CS `P0.6`.
+- The upstream ZMK `nice_view` shield overlay binds a Sharp LS0xx display at `160x68` and sets `zephyr,display = &nice_view`.
+- ZMK display init calls `zmk_display_status_screen()` and loads the returned LVGL screen.
+- Upstream `nice_view` currently provides a strong `zmk_display_status_screen()` via `custom_status_screen.c` when `CONFIG_NICE_VIEW_WIDGET_STATUS` is enabled.
+- A local LVGL renderer must avoid duplicate `zmk_display_status_screen()` definitions. The clean path is to disable the upstream `NICE_VIEW_WIDGET_STATUS` for scene-engine builds, then compile the local renderer as the status screen provider.
+- New firmware display sources must be guarded so `settings_reset` builds do not pick up the engine.
+- Normal builds must remain free of USB logging; debug logging stays confined to the dedicated debug artifacts.
+- The audit details are recorded for future agents in `.agentic/context/display-engine-increment-0.md`.
+- `make verify` passed during increment 0. A CMake-only west configure was attempted, but `west` was not available on the shell `PATH`.
+
 ### Increment 1
 
 - create a minimal local dual-screen abstraction

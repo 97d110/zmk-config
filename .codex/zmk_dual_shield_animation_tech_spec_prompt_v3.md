@@ -308,6 +308,8 @@ Increment 0 audit result:
 
 - create a minimal local dual-screen abstraction
 - render a placeholder top bar and placeholder animation region
+- placeholder geometry must read top-to-bottom: full-width status bar first, lower animation region second
+- side-specific placeholder variation must not make the display look like a left/right panel split
 - keep behavior simple and reversible
 - establish the display-engine logging convention and add debug-level trace points in the new planning/rendering logic
 

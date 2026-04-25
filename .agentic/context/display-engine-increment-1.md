@@ -14,6 +14,10 @@ Increment 1 adds the first local dual nice!view renderer slice.
 - Added minimal LVGL-free core planning under `display/core/`.
 - Added a local LVGL status-screen provider under `display/render/lvgl/`.
 - Added placeholder asset identifiers under `display/assets/`.
+- Corrected the placeholder geometry to read top-to-bottom: full-width status
+  bar first, lower animation region second. Side-specific variation is limited
+  to a small cue inside the lower region and should not create a left/right
+  panel split.
 - Added the display-engine logging convention and AGENTS rule.
 
 ## Logging

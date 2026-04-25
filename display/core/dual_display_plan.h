@@ -52,7 +52,7 @@ struct zmk_dual_display_status_bar_plan {
 struct zmk_dual_display_animation_plan {
     struct zmk_dual_display_rect bounds;
     enum zmk_dual_display_placeholder_asset asset;
-    bool mirror;
+    bool use_alternate_side_variant;
 };
 
 struct zmk_dual_display_screen_plan {

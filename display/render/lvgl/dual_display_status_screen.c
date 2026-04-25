@@ -72,6 +72,14 @@ static void render_status_bar(lv_obj_t *screen,
         render_status_slot(screen, &plan->slots[i]);
     }
 
+    const struct zmk_dual_display_rect divider = {
+        .x = 0,
+        .y = plan->bounds.y + plan->bounds.height - 1,
+        .width = ZMK_DUAL_DISPLAY_WIDTH,
+        .height = 1,
+    };
+    add_rect(screen, &divider, true);
+
     LOG_DBG("rendered status bar at %u,%u %ux%u with %u slots",
             (unsigned int)plan->bounds.x, (unsigned int)plan->bounds.y,
             (unsigned int)plan->bounds.width, (unsigned int)plan->bounds.height,
@@ -82,33 +90,40 @@ static void render_animation_region(lv_obj_t *screen,
                                     const struct zmk_dual_display_animation_plan *plan) {
     add_rect(screen, &plan->bounds, false);
 
-    const uint8_t anchor_x = plan->mirror ? 112 : 16;
-    const uint8_t secondary_x = plan->mirror ? 34 : 86;
+    const uint8_t cue_x = plan->use_alternate_side_variant ? 136 : 18;
 
-    struct zmk_dual_display_rect primary = {
-        .x = anchor_x,
+    struct zmk_dual_display_rect upper_motion_band = {
+        .x = 42,
         .y = plan->bounds.y + 8,
-        .width = 30,
-        .height = 30,
+        .width = 76,
+        .height = 8,
     };
-    struct zmk_dual_display_rect secondary = {
-        .x = secondary_x,
-        .y = plan->bounds.y + 18,
-        .width = 36,
-        .height = 18,
+    struct zmk_dual_display_rect center_frame = {
+        .x = 58,
+        .y = plan->bounds.y + 22,
+        .width = 44,
+        .height = 20,
     };
-    struct zmk_dual_display_rect baseline = {
-        .x = 12,
-        .y = plan->bounds.y + plan->bounds.height - 10,
-        .width = 136,
+    struct zmk_dual_display_rect side_cue = {
+        .x = cue_x,
+        .y = plan->bounds.y + 28,
+        .width = 6,
+        .height = 6,
+    };
+    struct zmk_dual_display_rect lower_motion_band = {
+        .x = 26,
+        .y = plan->bounds.y + plan->bounds.height - 9,
+        .width = 108,
         .height = 3,
     };
 
-    add_rect(screen, &primary, false);
-    add_rect(screen, &secondary, true);
-    add_rect(screen, &baseline, true);
+    add_rect(screen, &upper_motion_band, true);
+    add_rect(screen, &center_frame, false);
+    add_rect(screen, &side_cue, true);
+    add_rect(screen, &lower_motion_band, true);
 
-    LOG_DBG("rendered animation placeholder asset=%d mirror=%d", plan->asset, plan->mirror);
+    LOG_DBG("rendered top-down animation placeholder asset=%d alternate_variant=%d", plan->asset,
+            plan->use_alternate_side_variant);
 }
 
 static void render_screen_plan(lv_obj_t *screen, const struct zmk_dual_display_screen_plan *plan) {

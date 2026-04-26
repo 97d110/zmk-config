@@ -1,0 +1,7 @@
+.git/
+.west/
+.zmk/
+modules/
+zmk/
+build/
+keymap-drawer/

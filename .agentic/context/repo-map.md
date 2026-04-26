@@ -13,7 +13,8 @@
 - `keymap-drawer/`
   Generated output location for keymap diagrams and YAML exports.
 - `scripts/agentic/verify.sh`
-  Cheap structural validation invoked by `make verify`.
+  Cheap structural validation invoked by `make verify`; `make verify-docker`
+  runs the same script in a small Docker image with the required tools.
 - `.agentic/context/display-engine-increment-0.md`
   Audit of the current nice!view display path, build/debug implications, and local insertion points for the dual-display scene engine.
 - `.agentic/context/display-engine-logging-convention.md`

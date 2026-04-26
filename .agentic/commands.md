@@ -6,6 +6,13 @@
 make verify
 ```
 
+If the host machine is missing validation dependencies such as `rg`, run the
+same checks in Docker:
+
+```bash
+make verify-docker
+```
+
 ## Refresh West Workspace
 
 ```bash

@@ -5,13 +5,14 @@ menu "Eyelash Sofle display engine"
 
 config ZMK_DUAL_DISPLAY_SCENE_ENGINE
     bool "Local dual nice!view scene engine"
-    default y
+    default n
     depends on ZMK_DISPLAY
     depends on SHIELD_NICE_VIEW
     help
       Enables the local dual-display scene engine for the Eyelash Sofle
-      nice!view builds. The engine provides the custom ZMK display status
-      screen and keeps display planning local to this repository.
+      nice!view builds. Keep this disabled for release firmware until the
+      renderer has been validated on hardware, because it replaces the upstream
+      nice!view status screen.
 
 if ZMK_DUAL_DISPLAY_SCENE_ENGINE
 

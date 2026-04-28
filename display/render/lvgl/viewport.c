@@ -24,6 +24,11 @@ void zmk_dual_display_lvgl_configure_screen(lv_obj_t *screen) {
         return;
     }
 
+    ZMK_DUAL_DISPLAY_LOG_INF("configuring LVGL screen for panel=%ux%u portrait_plan=%ux%u",
+                             (unsigned int)ZMK_DUAL_DISPLAY_LONG_EDGE,
+                             (unsigned int)ZMK_DUAL_DISPLAY_SHORT_EDGE,
+                             (unsigned int)ZMK_DUAL_DISPLAY_WIDTH,
+                             (unsigned int)ZMK_DUAL_DISPLAY_HEIGHT);
     zmk_dual_display_lvgl_reset_obj(screen);
     lv_obj_set_size(screen, ZMK_DUAL_DISPLAY_LONG_EDGE, ZMK_DUAL_DISPLAY_SHORT_EDGE);
     lv_obj_set_style_bg_color(screen, lv_color_white(), LV_PART_MAIN);
@@ -38,12 +43,29 @@ struct zmk_dual_display_rect zmk_dual_display_lvgl_map_rect(
         return (struct zmk_dual_display_rect){0};
     }
 
-    return (struct zmk_dual_display_rect){
+    if ((uint16_t)bounds->x + bounds->width > ZMK_DUAL_DISPLAY_WIDTH ||
+        (uint16_t)bounds->y + bounds->height > ZMK_DUAL_DISPLAY_HEIGHT) {
+        ZMK_DUAL_DISPLAY_LOG_WRN("mapping out-of-range display bounds: %u,%u %ux%u within %ux%u",
+                                 (unsigned int)bounds->x, (unsigned int)bounds->y,
+                                 (unsigned int)bounds->width, (unsigned int)bounds->height,
+                                 (unsigned int)ZMK_DUAL_DISPLAY_WIDTH,
+                                 (unsigned int)ZMK_DUAL_DISPLAY_HEIGHT);
+    }
+
+    const struct zmk_dual_display_rect mapped = {
         .x = bounds->y,
         .y = ZMK_DUAL_DISPLAY_WIDTH - bounds->x - bounds->width,
         .width = bounds->height,
         .height = bounds->width,
     };
+
+    ZMK_DUAL_DISPLAY_LOG_DBG("mapped portrait rect %u,%u %ux%u to panel rect %u,%u %ux%u",
+                             (unsigned int)bounds->x, (unsigned int)bounds->y,
+                             (unsigned int)bounds->width, (unsigned int)bounds->height,
+                             (unsigned int)mapped.x, (unsigned int)mapped.y,
+                             (unsigned int)mapped.width, (unsigned int)mapped.height);
+
+    return mapped;
 }
 
 void zmk_dual_display_lvgl_apply_rect(lv_obj_t *obj,

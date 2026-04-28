@@ -13,7 +13,9 @@ static lv_obj_t *add_rect(lv_obj_t *parent, const struct zmk_dual_display_rect *
     lv_obj_t *obj = lv_obj_create(parent);
 
     if (obj == NULL) {
-        ZMK_DUAL_DISPLAY_LOG_WRN("mock failed to create placeholder rectangle");
+        ZMK_DUAL_DISPLAY_LOG_ERR("mock failed to create placeholder rectangle at %u,%u %ux%u",
+                                 (unsigned int)bounds->x, (unsigned int)bounds->y,
+                                 (unsigned int)bounds->width, (unsigned int)bounds->height);
         return NULL;
     }
 
@@ -276,6 +278,10 @@ static void render_status_slot(lv_obj_t *screen,
 
 static void render_status_bar(lv_obj_t *screen,
                               const struct zmk_dual_display_status_bar_plan *plan) {
+    ZMK_DUAL_DISPLAY_LOG_INF("mock rendering status bar bounds=%u,%u %ux%u slots=%u",
+                             (unsigned int)plan->bounds.x, (unsigned int)plan->bounds.y,
+                             (unsigned int)plan->bounds.width, (unsigned int)plan->bounds.height,
+                             (unsigned int)plan->slot_count);
     add_rect(screen, &plan->bounds, false);
 
     for (uint8_t i = 0; i < plan->slot_count && i < ZMK_DUAL_DISPLAY_STATUS_SLOT_COUNT; i++) {
@@ -299,6 +305,10 @@ static void render_status_bar(lv_obj_t *screen,
 
 static void render_animation_region(lv_obj_t *screen,
                                     const struct zmk_dual_display_animation_plan *plan) {
+    ZMK_DUAL_DISPLAY_LOG_INF("mock rendering animation region bounds=%u,%u %ux%u variant=%d activity=%d",
+                             (unsigned int)plan->bounds.x, (unsigned int)plan->bounds.y,
+                             (unsigned int)plan->bounds.width, (unsigned int)plan->bounds.height,
+                             plan->variant, plan->activity);
     add_rect(screen, &plan->bounds, false);
 
     const bool secondary_variant = plan->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY;

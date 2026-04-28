@@ -77,12 +77,37 @@ west build -d build/left-studio-debug -s zmk/app -b eyelash_sofle_left -S studio
   -DCONFIG_ZMK_USB_LOGGING=y \
   -DCONFIG_ZMK_STUDIO=y \
   -DCONFIG_ZMK_STUDIO_LOCKING=n \
+  -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
+
+west build -d build/right-debug -s zmk/app -b eyelash_sofle_right -S zmk-usb-logging -- \
+  -DZMK_CONFIG="$REPO_ROOT/config" \
+  -DSHIELD=nice_view \
+  -DCONFIG_ZMK_USB=y \
+  -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
+```
+
+## Display Engine Debug Builds
+
+These artifacts intentionally enable the local display scene engine and disable
+the upstream nice!view status widget. Use them only when isolating the local
+renderer from the working upstream display path.
+
+```bash
+REPO_ROOT=$(pwd)
+cd .zmk
+
+west build -d build/left-studio-display-engine-debug -s zmk/app -b eyelash_sofle_left -S studio-rpc-usb-uart -- \
+  -DZMK_CONFIG="$REPO_ROOT/config" \
+  -DSHIELD=nice_view \
+  -DCONFIG_ZMK_USB_LOGGING=y \
+  -DCONFIG_ZMK_STUDIO=y \
+  -DCONFIG_ZMK_STUDIO_LOCKING=n \
   -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000 \
   -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE=y \
   -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_LOG_LEVEL_DBG=y \
   -DCONFIG_NICE_VIEW_WIDGET_STATUS=n
 
-west build -d build/right-debug -s zmk/app -b eyelash_sofle_right -S zmk-usb-logging -- \
+west build -d build/right-display-engine-debug -s zmk/app -b eyelash_sofle_right -S zmk-usb-logging -- \
   -DZMK_CONFIG="$REPO_ROOT/config" \
   -DSHIELD=nice_view \
   -DCONFIG_ZMK_USB=y \

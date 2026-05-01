@@ -8,25 +8,47 @@
 #include <display/log.h>
 #include <display/render/lvgl/viewport.h>
 
-static lv_obj_t *add_rect(lv_obj_t *parent, const struct zmk_dual_display_rect *bounds,
-                          bool filled) {
-    lv_obj_t *obj = lv_obj_create(parent);
+static lv_color_t canvas_buf[ZMK_DUAL_DISPLAY_LONG_EDGE * ZMK_DUAL_DISPLAY_SHORT_EDGE];
 
-    if (obj == NULL) {
-        ZMK_DUAL_DISPLAY_LOG_ERR("mock failed to create placeholder rectangle at %u,%u %ux%u",
-                                 (unsigned int)bounds->x, (unsigned int)bounds->y,
-                                 (unsigned int)bounds->width, (unsigned int)bounds->height);
+static lv_obj_t *create_canvas(lv_obj_t *screen) {
+    lv_obj_t *canvas = lv_canvas_create(screen);
+
+    if (canvas == NULL) {
+        ZMK_DUAL_DISPLAY_LOG_ERR("mock failed to create placeholder canvas");
         return NULL;
     }
 
-    zmk_dual_display_lvgl_reset_obj(obj);
-    zmk_dual_display_lvgl_apply_rect(obj, bounds);
-    lv_obj_set_style_border_width(obj, 1, LV_PART_MAIN);
-    lv_obj_set_style_border_color(obj, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_color(obj, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(obj, filled ? LV_OPA_COVER : LV_OPA_TRANSP, LV_PART_MAIN);
+    zmk_dual_display_lvgl_reset_obj(canvas);
+    lv_canvas_set_buffer(canvas, canvas_buf, ZMK_DUAL_DISPLAY_LONG_EDGE,
+                         ZMK_DUAL_DISPLAY_SHORT_EDGE, LV_IMG_CF_TRUE_COLOR);
+    lv_obj_align(canvas, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_canvas_fill_bg(canvas, lv_color_white(), LV_OPA_COVER);
 
-    return obj;
+    return canvas;
+}
+
+static lv_obj_t *add_rect(lv_obj_t *canvas, const struct zmk_dual_display_rect *bounds,
+                          bool filled) {
+    if (canvas == NULL || bounds == NULL) {
+        ZMK_DUAL_DISPLAY_LOG_WRN("mock skipped rectangle for missing input: canvas=%p bounds=%p",
+                                 (void *)canvas, (const void *)bounds);
+        return NULL;
+    }
+
+    const struct zmk_dual_display_rect panel_bounds = zmk_dual_display_lvgl_map_rect(bounds);
+
+    lv_draw_rect_dsc_t rect_dsc;
+    lv_draw_rect_dsc_init(&rect_dsc);
+    rect_dsc.bg_color = lv_color_black();
+    rect_dsc.bg_opa = filled ? LV_OPA_COVER : LV_OPA_TRANSP;
+    rect_dsc.border_color = lv_color_black();
+    rect_dsc.border_opa = LV_OPA_COVER;
+    rect_dsc.border_width = filled ? 0 : 1;
+
+    lv_canvas_draw_rect(canvas, panel_bounds.x, panel_bounds.y, panel_bounds.width,
+                        panel_bounds.height, &rect_dsc);
+
+    return canvas;
 }
 
 static uint8_t centered_in(uint8_t origin, uint8_t parent_size, uint8_t child_size) {
@@ -362,6 +384,12 @@ void zmk_dual_display_lvgl_render_screen_plan(
 
     ZMK_DUAL_DISPLAY_LOG_DBG("mock rendering %s placeholder screen plan",
                              zmk_dual_display_side_name(plan->side));
-    render_status_bar(screen, &plan->status_bar);
-    render_animation_region(screen, &plan->animation);
+
+    lv_obj_t *canvas = create_canvas(screen);
+    if (canvas == NULL) {
+        return;
+    }
+
+    render_status_bar(canvas, &plan->status_bar);
+    render_animation_region(canvas, &plan->animation);
 }

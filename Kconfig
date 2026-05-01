@@ -8,6 +8,7 @@ config ZMK_DUAL_DISPLAY_SCENE_ENGINE
     default n
     depends on ZMK_DISPLAY
     depends on SHIELD_NICE_VIEW
+    select LV_USE_CANVAS
     help
       Enables the local dual-display scene engine for the Eyelash Sofle
       nice!view builds. Keep this disabled for release firmware until the

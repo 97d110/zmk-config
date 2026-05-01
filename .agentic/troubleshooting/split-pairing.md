@@ -27,8 +27,11 @@ This repo must keep settings-reset artifacts for both halves:
 
 Use the dedicated debug artifacts only while diagnosing runtime issues:
 
-- `eyelash_sofle_left_studio_debug`
+- `eyelash_sofle_left_debug`
 - `eyelash_sofle_right_debug`
+
+Use `eyelash_sofle_left_studio_debug` only for Studio-specific diagnosis after
+the baseline debug pair works.
 
 Read logs from each half over its own USB CDC ACM serial device:
 

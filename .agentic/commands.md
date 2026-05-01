@@ -67,6 +67,29 @@ west build -d build/right-settings-reset -s zmk/app -b eyelash_sofle_right -- \
 
 ## USB Logging Debug Builds
 
+Use `left-debug` and `right-debug` as the baseline pair for split/runtime
+diagnosis. The Studio debug artifact is a separate left-only build for testing
+Studio-specific behavior.
+
+```bash
+REPO_ROOT=$(pwd)
+cd .zmk
+
+west build -d build/left-debug -s zmk/app -b eyelash_sofle_left -S zmk-usb-logging -- \
+  -DZMK_CONFIG="$REPO_ROOT/config" \
+  -DSHIELD=nice_view \
+  -DCONFIG_ZMK_USB=y \
+  -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
+
+west build -d build/right-debug -s zmk/app -b eyelash_sofle_right -S zmk-usb-logging -- \
+  -DZMK_CONFIG="$REPO_ROOT/config" \
+  -DSHIELD=nice_view \
+  -DCONFIG_ZMK_USB=y \
+  -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
+```
+
+## Studio Debug Build
+
 ```bash
 REPO_ROOT=$(pwd)
 cd .zmk
@@ -77,12 +100,6 @@ west build -d build/left-studio-debug -s zmk/app -b eyelash_sofle_left -S studio
   -DCONFIG_ZMK_USB_LOGGING=y \
   -DCONFIG_ZMK_STUDIO=y \
   -DCONFIG_ZMK_STUDIO_LOCKING=n \
-  -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
-
-west build -d build/right-debug -s zmk/app -b eyelash_sofle_right -S zmk-usb-logging -- \
-  -DZMK_CONFIG="$REPO_ROOT/config" \
-  -DSHIELD=nice_view \
-  -DCONFIG_ZMK_USB=y \
   -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000
 ```
 
@@ -96,12 +113,10 @@ renderer from the working upstream display path.
 REPO_ROOT=$(pwd)
 cd .zmk
 
-west build -d build/left-studio-display-engine-debug -s zmk/app -b eyelash_sofle_left -S studio-rpc-usb-uart -- \
+west build -d build/left-display-engine-debug -s zmk/app -b eyelash_sofle_left -S zmk-usb-logging -- \
   -DZMK_CONFIG="$REPO_ROOT/config" \
   -DSHIELD=nice_view \
-  -DCONFIG_ZMK_USB_LOGGING=y \
-  -DCONFIG_ZMK_STUDIO=y \
-  -DCONFIG_ZMK_STUDIO_LOCKING=n \
+  -DCONFIG_ZMK_USB=y \
   -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000 \
   -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE=y \
   -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_LOG_LEVEL_DBG=y \
@@ -111,6 +126,22 @@ west build -d build/right-display-engine-debug -s zmk/app -b eyelash_sofle_right
   -DZMK_CONFIG="$REPO_ROOT/config" \
   -DSHIELD=nice_view \
   -DCONFIG_ZMK_USB=y \
+  -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000 \
+  -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE=y \
+  -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_LOG_LEVEL_DBG=y \
+  -DCONFIG_NICE_VIEW_WIDGET_STATUS=n
+```
+
+Use the Studio display-engine artifact only after the baseline display-engine
+debug pair works:
+
+```bash
+west build -d build/left-studio-display-engine-debug -s zmk/app -b eyelash_sofle_left -S studio-rpc-usb-uart -- \
+  -DZMK_CONFIG="$REPO_ROOT/config" \
+  -DSHIELD=nice_view \
+  -DCONFIG_ZMK_USB_LOGGING=y \
+  -DCONFIG_ZMK_STUDIO=y \
+  -DCONFIG_ZMK_STUDIO_LOCKING=n \
   -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=8000 \
   -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE=y \
   -DCONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_LOG_LEVEL_DBG=y \

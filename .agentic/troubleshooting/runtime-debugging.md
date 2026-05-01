@@ -2,10 +2,14 @@
 
 Use this guide when both halves are flashed with the dedicated debug artifacts:
 
-- `eyelash_sofle_left_studio_debug`
+- `eyelash_sofle_left_debug`
 - `eyelash_sofle_right_debug`
 
-Debug firmware exposes USB CDC ACM logs from each half. Do not expect right-half logs to relay through the left central; plug into and read each half directly.
+These baseline artifacts enable USB CDC ACM logging without enabling Studio.
+Use `eyelash_sofle_left_studio_debug` only when testing Studio-specific
+behavior after the baseline debug pair is known to work. Do not expect
+right-half logs to relay through the left central; plug into and read each half
+directly.
 
 ## Find The Log Ports
 

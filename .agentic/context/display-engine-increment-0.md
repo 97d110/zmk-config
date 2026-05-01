@@ -14,8 +14,13 @@ This note captures the repo wiring discovered before adding the dual nice!view s
   - `eyelash_sofle_left_settings_reset`: `shield: settings_reset`
   - `eyelash_sofle_right_settings_reset`: `shield: settings_reset`
 - USB logging debug artifacts:
-  - `eyelash_sofle_left_studio_debug`: `shield: nice_view`, Studio snippet, USB logging CMake args
+  - `eyelash_sofle_left_debug`: `shield: nice_view`, `snippet: zmk-usb-logging`
   - `eyelash_sofle_right_debug`: `shield: nice_view`, `snippet: zmk-usb-logging`
+  - `eyelash_sofle_left_studio_debug`: `shield: nice_view`, Studio snippet, USB logging CMake args
+- Display-engine debug artifacts:
+  - `eyelash_sofle_left_display_engine_debug`: `shield: nice_view`, `snippet: zmk-usb-logging`, local display engine enabled
+  - `eyelash_sofle_right_display_engine_debug`: `shield: nice_view`, `snippet: zmk-usb-logging`, local display engine enabled
+  - `eyelash_sofle_left_studio_display_engine_debug`: `shield: nice_view`, Studio snippet, local display engine enabled
 - Do not add debug logging to normal firmware artifacts.
 - Increment 1 should not require changing `build.yaml`.
 

@@ -52,9 +52,10 @@ struct zmk_dual_display_rect zmk_dual_display_lvgl_map_rect(
                                  (unsigned int)ZMK_DUAL_DISPLAY_HEIGHT);
     }
 
+    /* The installed display's portrait top edge is the landscape framebuffer's far edge. */
     const struct zmk_dual_display_rect mapped = {
-        .x = bounds->y,
-        .y = ZMK_DUAL_DISPLAY_WIDTH - bounds->x - bounds->width,
+        .x = ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height,
+        .y = bounds->x,
         .width = bounds->height,
         .height = bounds->width,
     };

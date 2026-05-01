@@ -40,7 +40,47 @@ timeout 12s cat /dev/ttyACM0 > .tmp/left-central.log
 timeout 12s cat /dev/ttyACM3 > .tmp/right-peripheral.log
 ```
 
+For reboot/startup captures, plain `cat` exits when USB CDC disconnects during
+reset. Use a reconnecting loop so the early boot logs after re-enumeration are
+not missed:
+
+```bash
+mkdir -p .tmp
+zsh -f -c 'end=$((SECONDS+75)); while (( SECONDS < end )); do if [[ -e /dev/ttyACM1 ]]; then timeout 2s cat /dev/ttyACM1 >> .tmp/left-restart.log; else sleep 0.2; fi; done'
+zsh -f -c 'end=$((SECONDS+75)); while (( SECONDS < end )); do if [[ -e /dev/ttyACM3 ]]; then timeout 2s cat /dev/ttyACM3 >> .tmp/right-restart.log; else sleep 0.2; fi; done'
+```
+
 Raw CDC reads can start mid-line or contain torn log lines. Capture again if a specific event needs clean context.
+
+## Display Engine Startup Checks
+
+Display-engine debug artifacts should log one `zmk_dual_display` startup
+sequence per half after reboot:
+
+```text
+creating dual display status screen: mock_renderer=1 nice_view_widget_status=0
+dual display default state: side=<left|right> role=<1|2> battery=0 activity=0 transport=0 split=0 layer=1
+display state initialized: side=<0|1> role=<1|2> battery=0 activity=0 transport=0 split=0 layer=1
+dual display plan built: side=<left|right> status_slots=3 animation=68x146+0+14
+created <left|right> dual display status screen
+```
+
+The initial unknown-value warnings are expected until live ZMK state adapters
+are wired:
+
+- `using unknown battery status value for bucket=0`
+- `using unknown split-link status value for state=0`
+- `using unknown transport status value for state=0` on the left central
+
+`<wrn> ls0xx: Unsupported` immediately after
+`created ... dual display status screen` comes from ZMK calling
+`display_blanking_off()` after loading the status screen. Zephyr's LS0XX driver
+only implements blanking through an optional `disp-en-gpios` devicetree
+property; nice!view does not provide that pin in the stock shield overlay, so
+the driver returns `-ENOTSUP`. Treat this warning as benign unless it appears
+before render completion or is paired with display write errors. The local
+renderer also does not depend on driver orientation; it maps portrait display
+plans into the landscape framebuffer itself.
 
 ## Healthy Split Input Path
 

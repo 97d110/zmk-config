@@ -46,9 +46,17 @@ Increment 2 adds the shared state model and makes status slots value-aware.
 - The firmware status screen logs initial default state capture through the
   state-transition helper.
 - The mock renderer logs slash-overlay rendering for unknown status values.
+- Hardware restart captures confirmed both halves initialize and render the
+  default display state. Unknown battery/split/transport status warnings are
+  expected until live ZMK state adapters replace the default unknown values.
+- `<wrn> ls0xx: Unsupported` after
+  `created ... dual display status screen` is the LS0XX driver rejecting
+  `display_blanking_off()` because the nice!view devicetree node has no
+  optional `disp-en-gpios` blanking control. This is not a display-engine
+  render failure; the local viewport mapper owns portrait-to-framebuffer
+  rotation.
 
 ## Validation
 
 - Run `make verify` after this increment.
-- Firmware builds were not required for this increment, but if `west` is
-  available, left and right `nice_view` builds are useful follow-up checks.
+- Firmware builds are validated by GitHub Actions from commits.

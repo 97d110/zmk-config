@@ -127,6 +127,8 @@ require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/mock/lvgl/plac
 require_match 'lv_canvas_draw_rect' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'slash overlay' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
+require_match 'ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height' 'display/render/lvgl/viewport.c'
+require_match '\.y = bounds->x' 'display/render/lvgl/viewport.c'
 require_no_match 'display/mock' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'Temporary placeholder drawings' 'display/assets/README.md'
 require_match 'This subtree is temporary by design' 'display/mock/README.md'

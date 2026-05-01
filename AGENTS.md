@@ -28,7 +28,7 @@ This repository is the primary ZMK config and board-module home for the Eyelash 
 ## Default Validation
 
 - Run `make verify` after each change.
-- If a disposable west workspace is available, follow `.agentic/commands.md` for local `west update` and build commands.
+- Firmware build validation is handled by GitHub Actions from commits; do not run local `west` builds unless the user explicitly asks for one.
 - For runtime debugging, flash one of the dedicated `*_debug` artifacts and inspect its USB serial logs directly.
 
 ## Change Checklist

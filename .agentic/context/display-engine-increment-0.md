@@ -74,7 +74,7 @@ Keep the dual-display engine local to this repo:
 ## Firmware Wiring Notes
 
 - The local LVGL renderer must avoid a duplicate strong `zmk_display_status_screen()` symbol with upstream `nice_view`.
-- The clean path is to disable the upstream `NICE_VIEW_WIDGET_STATUS` for local scene-engine builds, then compile the local renderer as the status screen provider.
+- The clean path is to disable the upstream `NICE_VIEW_WIDGET_STATUS` for display-engine artifacts, then compile the local renderer as the status screen provider.
 - Guard new firmware display sources so `settings_reset` builds do not pick up the engine.
 - Preserve Studio and debug artifact behavior; they should use the same display engine as normal nice!view builds unless intentionally documented otherwise.
 

@@ -12,4 +12,4 @@ State the user-facing outcome in one or two sentences.
 ## Validation
 
 - `make verify`
-- Any required local build or hardware smoke tests
+- Any required hardware smoke tests

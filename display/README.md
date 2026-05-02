@@ -11,7 +11,8 @@ without rewriting the core.
 - `display/render/lvgl/` owns the firmware LVGL adapter boundary and the ZMK
   `zmk_display_status_screen()` entry point, renderer contract, and viewport
   mapping.
-- `display/firmware/` will own future ZMK event/state adapters.
+- `display/firmware/` owns ZMK event/state adapters that translate firmware
+  runtime sources into the durable `display/core/` state model.
 - `display/assets/` is reserved for durable asset registries and final or
   long-lived placeholder assets after the generic engine is proven.
 

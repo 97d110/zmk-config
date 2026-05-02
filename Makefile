@@ -36,10 +36,10 @@ sim-web:
 	@python3 sim/web/app.py
 
 sim-web-docker-build:
-	@docker build -f sim/web/Dockerfile -t $(SIM_WEB_IMAGE) .
+	@$(MAKE) -C sim/web docker-build IMAGE=$(SIM_WEB_IMAGE)
 
 sim-web-docker: sim-web-docker-build
-	@docker run --rm -p $(SIM_WEB_PORT):8080 $(SIM_WEB_IMAGE)
+	@$(MAKE) -C sim/web docker-run IMAGE=$(SIM_WEB_IMAGE) PORT=$(SIM_WEB_PORT)
 
 context:
 	@sed -n '1,220p' .agentic/context/repo-map.md

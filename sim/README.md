@@ -28,6 +28,12 @@ Run the browser simulator in Docker:
 make sim-web-docker
 ```
 
+Or from the Dockerfile directory:
+
+```bash
+make -C sim/web docker
+```
+
 The simulator accepts interactive commands on stdin. Useful commands:
 
 - `show`

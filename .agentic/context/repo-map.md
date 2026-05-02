@@ -32,6 +32,9 @@
 - `.agentic/context/display-engine-increment-4.md`
   Handoff note for the Ubuntu console simulator, manual state switching, and
   host-side display-engine logging.
+- `.agentic/context/display-engine-increment-5.md`
+  Handoff note for the firmware state adapter, ZMK event subscriptions, and
+  event-driven LVGL refresh path.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
@@ -39,6 +42,10 @@
 - `display/render/lvgl/`
   Durable LVGL firmware adapter boundary, renderer contract, and viewport
   mapping. The current renderer contract is implemented by `display/mock/`.
+- `display/firmware/`
+  Durable ZMK firmware state adapter. It maps runtime battery, activity,
+  keypress, endpoint, layer, USB, BLE, and split-link sources into
+  `display/core/` state and queues refreshes on the ZMK display work queue.
 - `display/mock/`
   Temporary proof-of-concept placeholder rendering. It must preserve the
   portrait display contract and should be easy to replace or delete.

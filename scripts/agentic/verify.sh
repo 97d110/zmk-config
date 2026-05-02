@@ -18,6 +18,7 @@ required_files=(
   ".agentic/context/display-engine-increment-2.md"
   ".agentic/context/display-engine-increment-3.md"
   ".agentic/context/display-engine-increment-4.md"
+  ".agentic/context/display-engine-increment-5.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -33,11 +34,15 @@ required_files=(
   "display/core/dual_display_state.c"
   "display/core/dual_display_state.h"
   "display/core/README.md"
+  "display/firmware/README.md"
+  "display/firmware/dual_display_state_adapter.c"
+  "display/firmware/dual_display_state_adapter.h"
   "display/log.h"
   "display/mock/README.md"
   "display/mock/lvgl/placeholder_renderer.c"
   "display/mock/lvgl/placeholder_renderer.h"
   "display/render/lvgl/README.md"
+  "display/render/lvgl/dual_display_status_screen.h"
   "display/render/lvgl/screen_renderer.h"
   "display/render/lvgl/dual_display_status_screen.c"
   "display/render/lvgl/viewport.c"
@@ -47,6 +52,7 @@ required_files=(
   "sim/dual_display_sim.c"
   "sim/web/app.py"
   "sim/web/Dockerfile"
+  "sim/web/Makefile"
   "boards/arm/eyelash_sofle/Kconfig.board"
   "boards/arm/eyelash_sofle/Kconfig.defconfig"
   "boards/arm/eyelash_sofle/board.cmake"
@@ -119,8 +125,22 @@ require_no_match 'CONFIG_NICE_VIEW_WIDGET_STATUS=n' 'config/eyelash_sofle.conf'
 require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
 require_match 'display/core/dual_display_state.c' 'CMakeLists.txt'
+require_match 'display/firmware/dual_display_state_adapter.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'zmk_dual_display_firmware_init_state' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'zmk_dual_display_status_screen_update_from_state' 'display/render/lvgl/dual_display_status_screen.c'
+require_match 'zmk_dual_display_status_screen_update_from_state' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_LISTENER\(dual_display_firmware_state' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_activity_state_changed\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_battery_state_changed\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_endpoint_changed\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_keycode_state_changed\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_layer_state_changed\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_split_peripheral_status_changed\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'k_work_submit_to_queue\(zmk_display_work_q\(\), &firmware_render_work\)' 'display/firmware/dual_display_state_adapter.c'
+require_match 'display state event produced no visual state change' 'display/firmware/dual_display_state_adapter.c'
+require_match 'typing_activity_from_keypress' 'display/firmware/dual_display_state_adapter.c'
 require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
 require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S' 'display/core/dual_display_state.h'
 require_match 'enum zmk_dual_display_activity_bucket activity' 'display/core/dual_display_plan.h'
@@ -144,9 +164,12 @@ require_match 'SCENE_SLEEP' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'make sim' '.agentic/commands.md'
 require_match 'make sim-web-docker' '.agentic/commands.md'
 require_match 'Display Engine Increment 4 Handoff' '.agentic/context/display-engine-increment-4.md'
+require_match 'Display Engine Increment 5 Handoff' '.agentic/context/display-engine-increment-5.md'
+require_match 'display/firmware/' 'display/README.md'
 require_match 'dual display simulator' 'sim/dual_display_sim.c'
 require_match '\-\-batch' 'sim/dual_display_sim.c'
 require_match 'dual display web simulator' 'sim/web/app.py'
+require_match 'docker-run' 'sim/web/Makefile'
 require_match 'dual_display_sim --batch' 'sim/README.md'
 require_match 'zmk_dual_display_build_dual_plan_from_state' 'sim/dual_display_sim.c'
 require_match 'display/core/dual_display_plan.c' 'sim/Makefile'

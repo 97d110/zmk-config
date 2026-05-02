@@ -6,6 +6,11 @@ The status-screen provider in this directory owns the ZMK/LVGL entry point and
 screen lifecycle. It consumes `display/core/` plans and delegates drawing
 through `screen_renderer.h`.
 
+Firmware event adapters refresh the active screen through
+`zmk_dual_display_status_screen_update_from_state()`. Keep that function as a
+renderer-boundary entry point; event-source mapping belongs under
+`display/firmware/`.
+
 Renderer code must preserve the portrait display contract from `display/core/`:
 top and bottom edges are short, left and right edges are long, and the status
 bar belongs on the narrow top edge.

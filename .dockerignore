@@ -4,4 +4,6 @@
 modules/
 zmk/
 build/
+sim/build/
+.tmp/
 keymap-drawer/

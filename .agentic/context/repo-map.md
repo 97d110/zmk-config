@@ -29,6 +29,9 @@
 - `.agentic/context/display-engine-increment-3.md`
   Handoff note for scene-kind selection, energy and charging modifiers,
   expanded animation plan, and the scene-aware mock renderer dispatch.
+- `.agentic/context/display-engine-increment-4.md`
+  Handoff note for the Ubuntu console simulator, manual state switching, and
+  host-side display-engine logging.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
@@ -39,6 +42,11 @@
 - `display/mock/`
   Temporary proof-of-concept placeholder rendering. It must preserve the
   portrait display contract and should be easy to replace or delete.
+- `sim/`
+  Ubuntu console and browser simulator for the dual-display scene engine. It
+  compiles the durable `display/core/` sources directly, provides manual state
+  controls, and renders both screen plans as a compact preview with adjacent
+  `zmk_dual_display` logs. The Dockerized web app lives in `sim/web/`.
 - `.agentic/troubleshooting/split-pairing.md`
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 

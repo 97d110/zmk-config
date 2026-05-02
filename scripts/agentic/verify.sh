@@ -17,6 +17,7 @@ required_files=(
   ".agentic/context/display-engine-increment-1.md"
   ".agentic/context/display-engine-increment-2.md"
   ".agentic/context/display-engine-increment-3.md"
+  ".agentic/context/display-engine-increment-4.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -41,6 +42,11 @@ required_files=(
   "display/render/lvgl/dual_display_status_screen.c"
   "display/render/lvgl/viewport.c"
   "display/render/lvgl/viewport.h"
+  "sim/Makefile"
+  "sim/README.md"
+  "sim/dual_display_sim.c"
+  "sim/web/app.py"
+  "sim/web/Dockerfile"
   "boards/arm/eyelash_sofle/Kconfig.board"
   "boards/arm/eyelash_sofle/Kconfig.defconfig"
   "boards/arm/eyelash_sofle/board.cmake"
@@ -135,6 +141,16 @@ require_match 'select_scene_kind' 'display/core/dual_display_plan.c'
 require_match 'sleep override' 'display/core/dual_display_plan.c'
 require_match 'link-error override' 'display/core/dual_display_plan.c'
 require_match 'SCENE_SLEEP' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'make sim' '.agentic/commands.md'
+require_match 'make sim-web-docker' '.agentic/commands.md'
+require_match 'Display Engine Increment 4 Handoff' '.agentic/context/display-engine-increment-4.md'
+require_match 'dual display simulator' 'sim/dual_display_sim.c'
+require_match '\-\-batch' 'sim/dual_display_sim.c'
+require_match 'dual display web simulator' 'sim/web/app.py'
+require_match 'dual_display_sim --batch' 'sim/README.md'
+require_match 'zmk_dual_display_build_dual_plan_from_state' 'sim/dual_display_sim.c'
+require_match 'display/core/dual_display_plan.c' 'sim/Makefile'
+require_match 'ZMK_DUAL_DISPLAY_SIM_LOG' 'display/log.h'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
 require_match 'ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height' 'display/render/lvgl/viewport.c'
 require_match '\.y = bounds->x' 'display/render/lvgl/viewport.c'

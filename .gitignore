@@ -1,2 +1,4 @@
 **/.tmp
 **/.zmk
+sim/build/
+sim/web/__pycache__/

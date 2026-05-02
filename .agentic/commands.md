@@ -13,6 +13,25 @@ same checks in Docker:
 make verify-docker
 ```
 
+## Display Simulator
+
+```bash
+make sim
+```
+
+The simulator builds the durable `display/core/` planner on the host and opens
+an interactive console preview for both screens. It prints `zmk_dual_display`
+diagnostics to stderr while state changes are applied.
+
+```bash
+make sim-web
+make sim-web-docker
+```
+
+The web simulator exposes the same host simulator through a browser UI. Docker
+serves it on `http://localhost:8080` by default; override the host port with
+`SIM_WEB_PORT=<port>`.
+
 ## Firmware Builds
 
 Firmware artifacts are built by GitHub Actions from commits using the matrix in

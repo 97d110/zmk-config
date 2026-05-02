@@ -50,6 +50,20 @@ enum zmk_dual_display_scene_variant {
     ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY,
 };
 
+enum zmk_dual_display_scene_kind {
+    ZMK_DUAL_DISPLAY_SCENE_NORMAL,
+    ZMK_DUAL_DISPLAY_SCENE_SLEEP,
+    ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR,
+    ZMK_DUAL_DISPLAY_SCENE_FALLBACK,
+};
+
+enum zmk_dual_display_energy_level {
+    ZMK_DUAL_DISPLAY_ENERGY_UNKNOWN,
+    ZMK_DUAL_DISPLAY_ENERGY_LOW,
+    ZMK_DUAL_DISPLAY_ENERGY_MEDIUM,
+    ZMK_DUAL_DISPLAY_ENERGY_HIGH,
+};
+
 struct zmk_dual_display_rect {
     uint8_t x;
     uint8_t y;
@@ -72,7 +86,11 @@ struct zmk_dual_display_status_bar_plan {
 struct zmk_dual_display_animation_plan {
     struct zmk_dual_display_rect bounds;
     enum zmk_dual_display_scene_variant variant;
+    enum zmk_dual_display_scene_kind scene;
     enum zmk_dual_display_activity_bucket activity;
+    enum zmk_dual_display_layer_mode layer;
+    enum zmk_dual_display_energy_level energy;
+    bool charging;
 };
 
 struct zmk_dual_display_screen_plan {

@@ -325,12 +325,36 @@ static void render_status_bar(lv_obj_t *screen,
                              (unsigned int)plan->slot_count);
 }
 
-static void render_animation_region(lv_obj_t *screen,
-                                    const struct zmk_dual_display_animation_plan *plan) {
-    ZMK_DUAL_DISPLAY_LOG_INF("mock rendering animation region bounds=%u,%u %ux%u variant=%d activity=%d",
-                             (unsigned int)plan->bounds.x, (unsigned int)plan->bounds.y,
-                             (unsigned int)plan->bounds.width, (unsigned int)plan->bounds.height,
-                             plan->variant, plan->activity);
+static uint8_t activity_intensity(enum zmk_dual_display_activity_bucket activity) {
+    switch (activity) {
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S:
+        return 1;
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_5S:
+        return 2;
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_10S:
+        return 3;
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
+static uint8_t energy_intensity(enum zmk_dual_display_energy_level energy) {
+    switch (energy) {
+    case ZMK_DUAL_DISPLAY_ENERGY_LOW:
+        return 1;
+    case ZMK_DUAL_DISPLAY_ENERGY_MEDIUM:
+        return 2;
+    case ZMK_DUAL_DISPLAY_ENERGY_HIGH:
+        return 3;
+    default:
+        return 0;
+    }
+}
+
+static void render_scene_normal(lv_obj_t *screen,
+                                const struct zmk_dual_display_animation_plan *plan) {
     add_rect(screen, &plan->bounds, false);
 
     const bool secondary_variant = plan->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY;
@@ -338,13 +362,16 @@ static void render_animation_region(lv_obj_t *screen,
                                             : plan->bounds.x + 5;
     const uint8_t motion_band_width = plan->bounds.width - 20;
     const uint8_t center_frame_width = plan->bounds.width - 30;
-    const uint8_t lower_motion_band_width = plan->bounds.width - 16;
+    const uint8_t base_lower_band_width = plan->bounds.width - 16;
+    const uint8_t lower_band_width =
+        base_lower_band_width - 2 * (3 - energy_intensity(plan->energy));
+    const uint8_t upper_band_height = 4 + activity_intensity(plan->activity) * 2;
 
     struct zmk_dual_display_rect upper_motion_band = {
         .x = centered_in(plan->bounds.x, plan->bounds.width, motion_band_width),
         .y = plan->bounds.y + 18,
         .width = motion_band_width,
-        .height = 8,
+        .height = upper_band_height,
     };
     struct zmk_dual_display_rect center_frame = {
         .x = centered_in(plan->bounds.x, plan->bounds.width, center_frame_width),
@@ -359,9 +386,9 @@ static void render_animation_region(lv_obj_t *screen,
         .height = 6,
     };
     struct zmk_dual_display_rect lower_motion_band = {
-        .x = centered_in(plan->bounds.x, plan->bounds.width, lower_motion_band_width),
+        .x = centered_in(plan->bounds.x, plan->bounds.width, lower_band_width),
         .y = plan->bounds.y + plan->bounds.height - 20,
-        .width = lower_motion_band_width,
+        .width = lower_band_width,
         .height = 4,
     };
 
@@ -369,9 +396,140 @@ static void render_animation_region(lv_obj_t *screen,
     add_rect(screen, &center_frame, false);
     add_rect(screen, &side_cue, true);
     add_rect(screen, &lower_motion_band, true);
+}
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendered portrait animation placeholder variant=%d activity=%d",
-                             plan->variant, plan->activity);
+static void render_scene_sleep(lv_obj_t *screen,
+                               const struct zmk_dual_display_animation_plan *plan) {
+    add_rect(screen, &plan->bounds, true);
+}
+
+static void render_scene_link_error(lv_obj_t *screen,
+                                    const struct zmk_dual_display_animation_plan *plan) {
+    add_rect(screen, &plan->bounds, false);
+
+    for (uint8_t y = 0; y < plan->bounds.height; y += 4) {
+        const uint8_t offset = (y / 4) % 2 == 0 ? 0 : 2;
+        for (uint8_t x = offset; x < plan->bounds.width; x += 4) {
+            const struct zmk_dual_display_rect dot = {
+                .x = plan->bounds.x + x,
+                .y = plan->bounds.y + y,
+                .width = 1,
+                .height = 1,
+            };
+            add_rect(screen, &dot, true);
+        }
+    }
+
+    const uint8_t glyph_x = plan->bounds.x + (plan->bounds.width - 3) / 2;
+    const uint8_t glyph_y = plan->bounds.y + (plan->bounds.height - 16) / 2;
+    const struct zmk_dual_display_rect bang_stem = {
+        .x = glyph_x,
+        .y = glyph_y,
+        .width = 3,
+        .height = 10,
+    };
+    const struct zmk_dual_display_rect bang_dot = {
+        .x = glyph_x,
+        .y = glyph_y + 13,
+        .width = 3,
+        .height = 3,
+    };
+    add_rect(screen, &bang_stem, true);
+    add_rect(screen, &bang_dot, true);
+}
+
+static void render_scene_fallback(lv_obj_t *screen,
+                                  const struct zmk_dual_display_animation_plan *plan) {
+    add_rect(screen, &plan->bounds, false);
+
+    const uint8_t cell = 4;
+    for (uint8_t y = 0; y < plan->bounds.height; y += cell) {
+        for (uint8_t x = 0; x < plan->bounds.width; x += cell) {
+            const bool fill = ((x / cell) + (y / cell)) % 2 == 0;
+            if (!fill) {
+                continue;
+            }
+            const uint8_t cell_w =
+                (uint8_t)(x + cell <= plan->bounds.width ? cell : plan->bounds.width - x);
+            const uint8_t cell_h =
+                (uint8_t)(y + cell <= plan->bounds.height ? cell : plan->bounds.height - y);
+            const struct zmk_dual_display_rect square = {
+                .x = plan->bounds.x + x,
+                .y = plan->bounds.y + y,
+                .width = cell_w,
+                .height = cell_h,
+            };
+            add_rect(screen, &square, true);
+        }
+    }
+}
+
+static void render_charging_overlay(lv_obj_t *screen,
+                                    const struct zmk_dual_display_animation_plan *plan) {
+    const uint8_t corner_x = plan->bounds.x + plan->bounds.width - 8;
+    const uint8_t corner_y = plan->bounds.y + 4;
+    const struct zmk_dual_display_rect bolt_top = {
+        .x = corner_x + 2,
+        .y = corner_y,
+        .width = 2,
+        .height = 4,
+    };
+    const struct zmk_dual_display_rect bolt_mid = {
+        .x = corner_x,
+        .y = corner_y + 4,
+        .width = 4,
+        .height = 1,
+    };
+    const struct zmk_dual_display_rect bolt_bottom = {
+        .x = corner_x,
+        .y = corner_y + 5,
+        .width = 2,
+        .height = 4,
+    };
+    add_rect(screen, &bolt_top, true);
+    add_rect(screen, &bolt_mid, true);
+    add_rect(screen, &bolt_bottom, true);
+}
+
+static void log_scene_change_once(const struct zmk_dual_display_animation_plan *plan) {
+    static int last_scene_by_variant[2] = {-1, -1};
+
+    const uint8_t idx =
+        plan->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY ? 1 : 0;
+    if ((int)plan->scene == last_scene_by_variant[idx]) {
+        return;
+    }
+    last_scene_by_variant[idx] = (int)plan->scene;
+
+    ZMK_DUAL_DISPLAY_LOG_DBG(
+        "mock rendered portrait animation placeholder variant=%d scene=%d activity=%d "
+        "energy=%d charging=%d",
+        plan->variant, plan->scene, plan->activity, plan->energy, (int)plan->charging);
+}
+
+static void render_animation_region(lv_obj_t *screen,
+                                    const struct zmk_dual_display_animation_plan *plan) {
+    switch (plan->scene) {
+    case ZMK_DUAL_DISPLAY_SCENE_SLEEP:
+        render_scene_sleep(screen, plan);
+        break;
+    case ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR:
+        render_scene_link_error(screen, plan);
+        break;
+    case ZMK_DUAL_DISPLAY_SCENE_FALLBACK:
+        render_scene_fallback(screen, plan);
+        break;
+    case ZMK_DUAL_DISPLAY_SCENE_NORMAL:
+    default:
+        render_scene_normal(screen, plan);
+        break;
+    }
+
+    if (plan->charging) {
+        render_charging_overlay(screen, plan);
+    }
+
+    log_scene_change_once(plan);
 }
 
 void zmk_dual_display_lvgl_render_screen_plan(

@@ -26,6 +26,9 @@
 - `.agentic/context/display-engine-increment-2.md`
   Handoff note for the shared state model, state-aware status planning, and
   placeholder status-value rendering.
+- `.agentic/context/display-engine-increment-3.md`
+  Handoff note for scene-kind selection, energy and charging modifiers,
+  expanded animation plan, and the scene-aware mock renderer dispatch.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges

@@ -16,6 +16,7 @@ required_files=(
   ".agentic/context/display-engine-logging-convention.md"
   ".agentic/context/display-engine-increment-1.md"
   ".agentic/context/display-engine-increment-2.md"
+  ".agentic/context/display-engine-increment-3.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -126,6 +127,14 @@ require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/du
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'lv_canvas_draw_rect' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'slash overlay' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'enum zmk_dual_display_scene_kind' 'display/core/dual_display_plan.h'
+require_match 'ZMK_DUAL_DISPLAY_ENERGY_HIGH' 'display/core/dual_display_plan.h'
+require_match 'ZMK_DUAL_DISPLAY_SCENE_SLEEP' 'display/core/dual_display_plan.c'
+require_match 'ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR' 'display/core/dual_display_plan.c'
+require_match 'select_scene_kind' 'display/core/dual_display_plan.c'
+require_match 'sleep override' 'display/core/dual_display_plan.c'
+require_match 'link-error override' 'display/core/dual_display_plan.c'
+require_match 'SCENE_SLEEP' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
 require_match 'ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height' 'display/render/lvgl/viewport.c'
 require_match '\.y = bounds->x' 'display/render/lvgl/viewport.c'

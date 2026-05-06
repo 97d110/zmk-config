@@ -26,9 +26,13 @@ now initializes from and reacts to runtime sources.
 
 - Battery buckets come from `zmk_battery_state_of_charge()` and use USB power
   presence as the charging signal when the USB device stack is enabled.
-- Activity maps ZMK active/idle/sleep to the existing typing, idle, and sleep
-  display buckets. On the central side, keypress events refine active typing
-  into the existing typing-streak buckets with a short reset window.
+- Initial activity maps ZMK active/idle/sleep to the existing typing, idle, and
+  sleep display buckets. Runtime idle/sleep events update display state
+  directly, while runtime active events leave typing animation state to the
+  central-side keypress cycle. Keypress events only set a lightweight boolean
+  for the current typing period. A one-second delayed work cycle logs the
+  complete display state, advances the typing bucket, and either schedules the
+  next one-second period or stops for the future decay protocol.
 - Central firmware maps the highest active keymap layer and selected endpoint
   into display layer and transport state. BLE transport shows connected only
   when the active BLE profile is connected.

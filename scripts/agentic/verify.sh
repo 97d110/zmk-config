@@ -23,6 +23,7 @@ required_files=(
   "build.yaml"
   "CMakeLists.txt"
   "Kconfig"
+  "docs/display-firmware-animation-flow.md"
   "config/west.yml"
   "config/eyelash_sofle.conf"
   "config/eyelash_sofle.keymap"
@@ -140,7 +141,10 @@ require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_layer_state_ch
 require_match 'ZMK_SUBSCRIPTION\(dual_display_firmware_state, zmk_split_peripheral_status_changed\)' 'display/firmware/dual_display_state_adapter.c'
 require_match 'k_work_submit_to_queue\(zmk_display_work_q\(\), &firmware_render_work\)' 'display/firmware/dual_display_state_adapter.c'
 require_match 'display state event produced no visual state change' 'display/firmware/dual_display_state_adapter.c'
-require_match 'typing_activity_from_keypress' 'display/firmware/dual_display_state_adapter.c'
+require_match 'K_WORK_DELAYABLE_DEFINE\(typing_activity_work' 'display/firmware/dual_display_state_adapter.c'
+require_match 'record_typing_keypress_locked' 'display/firmware/dual_display_state_adapter.c'
+require_match 'complete display state' 'display/firmware/dual_display_state_adapter.c'
+require_match 'typing-decay-pending' 'display/firmware/dual_display_state_adapter.c'
 require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
 require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S' 'display/core/dual_display_state.h'
 require_match 'enum zmk_dual_display_activity_bucket activity' 'display/core/dual_display_plan.h'
@@ -184,6 +188,12 @@ require_match 'code-organization-convention\.md' 'AGENTS.md'
 require_match 'durable product/core code and temporary/mock code' 'AGENTS.md'
 require_match 'Code organization convention for increments 1-7' '.codex/zmk_dual_shield_animation_tech_spec_prompt_v3.md'
 require_match 'display-engine-logging-convention\.md' 'AGENTS.md'
+require_match 'Typing Lifecycle' 'docs/display-firmware-animation-flow.md'
+require_match 'zmk_dual_display_firmware_init_state' 'docs/display-firmware-animation-flow.md'
+require_match 'firmware_state_listener_cb' 'docs/display-firmware-animation-flow.md'
+require_match 'typing_activity_work_cb' 'docs/display-firmware-animation-flow.md'
+require_match '```mermaid' 'docs/display-firmware-animation-flow.md'
+require_match 'display-firmware-animation-flow\.md' '.agentic/context/repo-map.md'
 
 require_match 'name:\s+zmk' 'config/west.yml'
 require_match 'revision:\s+v0\.3' 'config/west.yml'

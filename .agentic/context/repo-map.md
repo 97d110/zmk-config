@@ -56,6 +56,10 @@
   `zmk_dual_display` logs. The Dockerized web app lives in `sim/web/`.
 - `.agentic/troubleshooting/split-pairing.md`
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
+- `docs/display-firmware-animation-flow.md`
+  Durable technical explanation of the firmware animation-control path,
+  including ZMK event entry points, state lifecycle, one-second typing activity
+  cycle, render lifecycle, and a complete system wiring diagram.
 
 ## Ownership Boundaries
 

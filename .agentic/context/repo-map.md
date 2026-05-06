@@ -35,6 +35,9 @@
 - `.agentic/context/display-engine-increment-5.md`
   Handoff note for the firmware state adapter, ZMK event subscriptions, and
   event-driven LVGL refresh path.
+- `.agentic/context/display-engine-increment-5A.md`
+  Handoff note for the lightweight one-second typing activity cycle, complete
+  state logs, and explicit decay-pending lifecycle point.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges

@@ -19,6 +19,7 @@ required_files=(
   ".agentic/context/display-engine-increment-3.md"
   ".agentic/context/display-engine-increment-4.md"
   ".agentic/context/display-engine-increment-5.md"
+  ".agentic/context/display-engine-increment-5A.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -169,6 +170,8 @@ require_match 'make sim' '.agentic/commands.md'
 require_match 'make sim-web-docker' '.agentic/commands.md'
 require_match 'Display Engine Increment 4 Handoff' '.agentic/context/display-engine-increment-4.md'
 require_match 'Display Engine Increment 5 Handoff' '.agentic/context/display-engine-increment-5.md'
+require_match 'Display Engine Increment 5\.A Handoff' '.agentic/context/display-engine-increment-5A.md'
+require_match 'typing-decay-pending' '.agentic/context/display-engine-increment-5A.md'
 require_match 'display/firmware/' 'display/README.md'
 require_match 'dual display simulator' 'sim/dual_display_sim.c'
 require_match '\-\-batch' 'sim/dual_display_sim.c'

@@ -26,6 +26,15 @@ config ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER
       stable render contract so this temporary implementation can be removed
       without changing core planning code.
 
+config ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS
+    int "Typing activity check period in milliseconds"
+    default 1000
+    range 1 60000
+    help
+      Sets the display-only typing check period. Keypresses mark the current
+      period as active; when a period completes without a keypress, the display
+      activity returns to idle.
+
 module = ZMK_DUAL_DISPLAY_SCENE_ENGINE
 module-str = zmk_dual_display
 source "subsys/logging/Kconfig.template.log_config"

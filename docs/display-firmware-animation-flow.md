@@ -41,11 +41,11 @@ objects.
 
 ### Core State And Planner
 
-`display/core/dual_display_state.*` owns normalized display state buckets:
+`display/core/dual_display_state.*` owns normalized display state:
 
 - side and role,
 - battery bucket including charging buckets,
-- activity bucket,
+- semantic activity state: idle, typing, or sleep,
 - transport state,
 - split-link state,
 - layer mode.
@@ -186,14 +186,14 @@ the adapter a usable value.
 
 Runtime idle and sleep activity events update display activity directly.
 
-Runtime active events do not directly advance typing animation state. Active is
-treated as a coarse ZMK runtime signal, while the display animation state is
-owned by the lighter one-second typing lifecycle described below.
+Runtime active events do not directly advance animation-specific typing state.
+Active is treated as a coarse ZMK runtime signal, while semantic display typing
+state is owned by the lighter typing check lifecycle described below.
 
 ## Typing Lifecycle
 
-Typing is intentionally split into a hot keypress path and a slower animation
-clock path.
+Typing is intentionally split into a hot keypress path and a slower semantic
+activity check path.
 
 ### Hot Keypress Path
 
@@ -203,7 +203,8 @@ keypress handler does minimal work:
 1. ignore release events,
 2. set `typing_period_had_keypress = true`,
 3. if no typing period is active, set `typing_period_active = true`,
-4. schedule the first one-second delayed work item.
+4. schedule the first delayed work item using
+   `CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS`.
 
 The keypress path does not:
 
@@ -212,28 +213,28 @@ The keypress path does not:
 - log every key,
 - queue a display redraw directly.
 
-### One-Second Typing Period
+### Typing Check Period
 
 `typing_activity_work_cb()` runs from the ZMK display work queue after each
-one-second period.
+configured typing check period.
 
 At the end of a period, it reads and clears the boolean that was set by
 keypresses:
 
 - If the period had a keypress:
-  - increment `typing_activity_seconds`,
-  - map elapsed typing seconds into an activity bucket,
+  - keep semantic activity set to `typing`,
   - log the complete display state,
-  - redraw only if the display state bucket changed,
-  - schedule the next one-second period.
+  - redraw only if the display state changed,
+  - schedule the next typing check period.
 - If the period had no keypress:
   - reset the active typing period fields,
-  - log the complete display state with `reason=typing-decay-pending`,
-  - stop scheduling new one-second periods.
+  - set semantic activity to `idle`,
+  - log the complete display state with `reason=typing-return-idle`,
+  - redraw if the display state changed,
+  - stop scheduling new typing check periods.
 
-The actual decay protocol after a no-keypress period is intentionally left as
-the next design step. The current lifecycle cleanly identifies the point where
-decay should begin.
+Theme-specific typing intensity, decay, and animation timing are intentionally
+not part of core activity state.
 
 ## Render Lifecycle
 
@@ -250,7 +251,7 @@ The normal event render path is:
 7. The LVGL boundary rebuilds the screen plan from state.
 8. The renderer contract draws the plan.
 
-Typing period work is similar, but it is driven by a delayed one-second work
+Typing period work is similar, but it is driven by a delayed configurable check
 cycle instead of a direct ZMK state event.
 
 ## Complete Wiring Diagram
@@ -285,13 +286,13 @@ flowchart TD
         State["firmware_state<br/>zmk_dual_display_state"]
         Compare["states_equal(previous, next)"]
         KeyFlag["typing_period_had_keypress = true"]
-        TypingWork["typing_activity_work_cb()<br/>1 second delayed work"]
+        TypingWork["typing_activity_work_cb()<br/>configured delayed work"]
         CompleteLog["complete display state log"]
         RenderWork["firmware_render_work"]
     end
 
     subgraph Core["display/core"]
-        Buckets["state bucket mapping"]
+        Mapping["state mapping"]
         Plan["zmk_dual_display_build_screen_plan_from_state()"]
         Scene["scene + status + animation plan"]
     end
@@ -337,7 +338,7 @@ flowchart TD
     KeyEvt --> Listener
 
     Listener --> Apply
-    Apply --> Buckets
+    Apply --> Mapping
     Apply --> Compare
     Compare -->|"changed"| State
     Compare -->|"changed"| RenderWork
@@ -345,13 +346,13 @@ flowchart TD
 
     KeyEvt -->|"press only"| KeyFlag
     KeyFlag -->|"starts if inactive"| TypingWork
-    TypingWork -->|"period had keypress"| Buckets
+    TypingWork -->|"period had keypress"| Mapping
     TypingWork --> CompleteLog
-    TypingWork -->|"bucket changed"| State
-    TypingWork -->|"bucket changed"| Refresh
+    TypingWork -->|"state changed"| State
+    TypingWork -->|"state changed"| Refresh
     TypingWork -->|"period had keypress"| TypingWork
     TypingWork -->|"no keypress"| CompleteLog
-    TypingWork -->|"no keypress"| Stop["stop; decay pending"]
+    TypingWork -->|"no keypress"| Stop["stop; idle"]
 
     RenderWork --> Refresh
     Refresh --> Plan
@@ -378,4 +379,4 @@ Important runtime logs include:
 - render queueing and refresh failures.
 
 The typing lifecycle intentionally avoids per-key debug logs. The complete
-state should be visible once per one-second typing period instead.
+state should be visible once per configured typing check period instead.

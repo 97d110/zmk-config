@@ -164,14 +164,11 @@ static bool battery_in_range(enum zmk_dual_display_battery_bucket battery) {
     }
 }
 
-static bool activity_in_range(enum zmk_dual_display_activity_bucket activity) {
+static bool activity_in_range(enum zmk_dual_display_activity_state activity) {
     switch (activity) {
     case ZMK_DUAL_DISPLAY_ACTIVITY_IDLE:
     case ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP:
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S:
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_5S:
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_10S:
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S:
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING:
         return true;
     default:
         return false;

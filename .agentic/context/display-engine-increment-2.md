@@ -9,8 +9,8 @@ Increment 2 adds the shared state model and makes status slots value-aware.
   and planning share one side model.
 - Added battery buckets for `0-10`, `11-50`, and `51-100` percent, with
   matching charging variants.
-- Added activity buckets for idle, sleep, and typing streaks capped at 2s, 5s,
-  10s, and 15s.
+- Added activity state. This was later simplified to semantic idle, typing, and
+  sleep states.
 - Added transport, split-link, and layer-mode state enums.
 - Added default side-derived firmware state:
   - left is central,
@@ -23,8 +23,8 @@ Increment 2 adds the shared state model and makes status slots value-aware.
 - Expanded status slot plans from active/inactive to typed values so renderers
   can distinguish unknown, disconnected, charging, transport, split, and layer
   states.
-- Carried the activity bucket into the animation plan so future animation
-  selection can use the shared state contract without another plan-shape change.
+- Carried activity state into the animation plan so future animation selection
+  can use the shared state contract without another plan-shape change.
 - Updated the mock LVGL renderer to draw placeholder battery fill/charging,
   USB/BT/disconnected transport, split-link, layer letters, and slash overlays
   for unknown values.

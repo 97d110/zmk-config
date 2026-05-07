@@ -36,8 +36,11 @@
   Handoff note for the firmware state adapter, ZMK event subscriptions, and
   event-driven LVGL refresh path.
 - `.agentic/context/display-engine-increment-5A.md`
-  Handoff note for the lightweight one-second typing activity cycle, complete
-  state logs, and explicit decay-pending lifecycle point.
+  Handoff note for the lightweight configurable typing activity cycle,
+  complete state logs, and semantic typing-to-idle lifecycle.
+- `.agentic/context/display-engine-increment-5B.md`
+  Handoff note for the boundary between core logical display state and future
+  theme-specific animation state.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
@@ -61,8 +64,8 @@
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 - `docs/display-firmware-animation-flow.md`
   Durable technical explanation of the firmware animation-control path,
-  including ZMK event entry points, state lifecycle, one-second typing activity
-  cycle, render lifecycle, and a complete system wiring diagram.
+  including ZMK event entry points, state lifecycle, configurable typing
+  activity cycle, render lifecycle, and a complete system wiring diagram.
 
 ## Ownership Boundaries
 

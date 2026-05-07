@@ -325,16 +325,10 @@ static void render_status_bar(lv_obj_t *screen,
                              (unsigned int)plan->slot_count);
 }
 
-static uint8_t activity_intensity(enum zmk_dual_display_activity_bucket activity) {
+static uint8_t activity_intensity(enum zmk_dual_display_activity_state activity) {
     switch (activity) {
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S:
-        return 1;
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_5S:
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING:
         return 2;
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_10S:
-        return 3;
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S:
-        return 4;
     default:
         return 0;
     }

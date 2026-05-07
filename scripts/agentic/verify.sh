@@ -20,6 +20,7 @@ required_files=(
   ".agentic/context/display-engine-increment-4.md"
   ".agentic/context/display-engine-increment-5.md"
   ".agentic/context/display-engine-increment-5A.md"
+  ".agentic/context/display-engine-increment-5B.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -145,10 +146,11 @@ require_match 'display state event produced no visual state change' 'display/fir
 require_match 'K_WORK_DELAYABLE_DEFINE\(typing_activity_work' 'display/firmware/dual_display_state_adapter.c'
 require_match 'record_typing_keypress_locked' 'display/firmware/dual_display_state_adapter.c'
 require_match 'complete display state' 'display/firmware/dual_display_state_adapter.c'
-require_match 'typing-decay-pending' 'display/firmware/dual_display_state_adapter.c'
+require_match 'typing-return-idle' 'display/firmware/dual_display_state_adapter.c'
+require_match 'CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
 require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
-require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S' 'display/core/dual_display_state.h'
-require_match 'enum zmk_dual_display_activity_bucket activity' 'display/core/dual_display_plan.h'
+require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING' 'display/core/dual_display_state.h'
+require_match 'enum zmk_dual_display_activity_state activity' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_log_state_transition' 'display/core/dual_display_state.c'
 require_match 'mapped invalid battery percent' 'display/core/dual_display_state.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER' 'Kconfig'
@@ -171,7 +173,10 @@ require_match 'make sim-web-docker' '.agentic/commands.md'
 require_match 'Display Engine Increment 4 Handoff' '.agentic/context/display-engine-increment-4.md'
 require_match 'Display Engine Increment 5 Handoff' '.agentic/context/display-engine-increment-5.md'
 require_match 'Display Engine Increment 5\.A Handoff' '.agentic/context/display-engine-increment-5A.md'
-require_match 'typing-decay-pending' '.agentic/context/display-engine-increment-5A.md'
+require_match 'typing-return-idle' '.agentic/context/display-engine-increment-5A.md'
+require_match 'Display Engine Increment 5\.B Handoff' '.agentic/context/display-engine-increment-5B.md'
+require_match 'core logical display state' '.agentic/context/display-engine-increment-5B.md'
+require_match 'theme animation state' '.agentic/context/display-engine-increment-5B.md'
 require_match 'display/firmware/' 'display/README.md'
 require_match 'dual display simulator' 'sim/dual_display_sim.c'
 require_match '\-\-batch' 'sim/dual_display_sim.c'

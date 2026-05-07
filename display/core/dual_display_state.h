@@ -29,13 +29,10 @@ enum zmk_dual_display_battery_bucket {
     ZMK_DUAL_DISPLAY_BATTERY_51_100_CHARGING,
 };
 
-enum zmk_dual_display_activity_bucket {
+enum zmk_dual_display_activity_state {
     ZMK_DUAL_DISPLAY_ACTIVITY_IDLE,
     ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP,
-    ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S,
-    ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_5S,
-    ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_10S,
-    ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S,
+    ZMK_DUAL_DISPLAY_ACTIVITY_TYPING,
 };
 
 enum zmk_dual_display_transport_state {
@@ -63,7 +60,7 @@ struct zmk_dual_display_state {
     enum zmk_dual_display_side side;
     enum zmk_dual_display_role role;
     enum zmk_dual_display_battery_bucket battery;
-    enum zmk_dual_display_activity_bucket activity;
+    enum zmk_dual_display_activity_state activity;
     enum zmk_dual_display_transport_state transport;
     enum zmk_dual_display_split_link_state split_link;
     enum zmk_dual_display_layer_mode layer;
@@ -77,9 +74,6 @@ void zmk_dual_display_default_state(enum zmk_dual_display_side side,
                                     struct zmk_dual_display_state *out_state);
 
 enum zmk_dual_display_layer_mode zmk_dual_display_layer_mode_from_index(uint8_t layer);
-
-enum zmk_dual_display_activity_bucket
-zmk_dual_display_activity_bucket_from_typing_streak(uint32_t typing_streak_ms, bool sleeping);
 
 enum zmk_dual_display_battery_bucket zmk_dual_display_battery_bucket_from_percent(
     int16_t percent, bool charging);

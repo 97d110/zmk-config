@@ -20,10 +20,6 @@
 struct sim_state {
     struct zmk_dual_display_state left;
     struct zmk_dual_display_state right;
-    uint32_t left_typing_ms;
-    uint32_t right_typing_ms;
-    bool left_sleeping;
-    bool right_sleeping;
 };
 
 static const char *scene_name(enum zmk_dual_display_scene_kind scene) {
@@ -193,39 +189,6 @@ static struct zmk_dual_display_state *select_side(struct sim_state *state, const
     return NULL;
 }
 
-static uint32_t *select_typing_ms(struct sim_state *state, const char *side) {
-    if (strcmp(side, "left") == 0) {
-        return &state->left_typing_ms;
-    }
-    if (strcmp(side, "right") == 0) {
-        return &state->right_typing_ms;
-    }
-    return NULL;
-}
-
-static bool *select_sleeping(struct sim_state *state, const char *side) {
-    if (strcmp(side, "left") == 0) {
-        return &state->left_sleeping;
-    }
-    if (strcmp(side, "right") == 0) {
-        return &state->right_sleeping;
-    }
-    return NULL;
-}
-
-static void update_activity(struct sim_state *state, const char *side) {
-    struct zmk_dual_display_state *display_state = select_side(state, side);
-    uint32_t *typing_ms = select_typing_ms(state, side);
-    bool *sleeping = select_sleeping(state, side);
-
-    if (display_state == NULL || typing_ms == NULL || sleeping == NULL) {
-        return;
-    }
-
-    display_state->activity =
-        zmk_dual_display_activity_bucket_from_typing_streak(*typing_ms, *sleeping);
-}
-
 static bool parse_bool_token(const char *value, bool *out) {
     if (strcmp(value, "on") == 0 || strcmp(value, "true") == 0 || strcmp(value, "yes") == 0) {
         *out = true;
@@ -239,7 +202,7 @@ static bool parse_bool_token(const char *value, bool *out) {
 }
 
 static void print_help(void) {
-    puts("commands: show, battery <side> <percent> [charging], activity <side> <ms>,");
+    puts("commands: show, battery <side> <percent> [charging], activity <side> <idle|typing>,");
     puts("          sleep <side> <on|off>, split <side> <unknown|connected|disconnected>,");
     puts("          transport <side> <unknown|usb|bt|disconnected>, layer <side> <0-3>, quit");
 }
@@ -281,20 +244,22 @@ static bool handle_command(struct sim_state *state, char *line, bool auto_render
         display_state->battery =
             zmk_dual_display_battery_bucket_from_percent((int16_t)percent, charging);
     } else if (strcmp(cmd, "activity") == 0) {
-        uint32_t *typing_ms = select_typing_ms(state, side);
-        bool *sleeping = select_sleeping(state, side);
-        *typing_ms = (uint32_t)strtoul(value, NULL, 10);
-        *sleeping = false;
-        update_activity(state, side);
+        if (strcmp(value, "typing") == 0) {
+            display_state->activity = ZMK_DUAL_DISPLAY_ACTIVITY_TYPING;
+        } else if (strcmp(value, "idle") == 0) {
+            display_state->activity = ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
+        } else {
+            puts("activity expects idle or typing");
+            return true;
+        }
     } else if (strcmp(cmd, "sleep") == 0) {
         bool sleeping = false;
-        bool *sleeping_state = select_sleeping(state, side);
         if (!parse_bool_token(value, &sleeping)) {
             puts("sleep expects on or off");
             return true;
         }
-        *sleeping_state = sleeping;
-        update_activity(state, side);
+        display_state->activity =
+            sleeping ? ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP : ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
     } else if (strcmp(cmd, "split") == 0) {
         if (strcmp(value, "connected") == 0) {
             display_state->split_link = ZMK_DUAL_DISPLAY_SPLIT_LINK_CONNECTED;

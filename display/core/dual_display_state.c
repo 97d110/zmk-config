@@ -77,41 +77,6 @@ enum zmk_dual_display_layer_mode zmk_dual_display_layer_mode_from_index(uint8_t 
     }
 }
 
-enum zmk_dual_display_activity_bucket
-zmk_dual_display_activity_bucket_from_typing_streak(uint32_t typing_streak_ms, bool sleeping) {
-    if (sleeping) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped sleeping state to sleep activity bucket");
-        return ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP;
-    }
-
-    if (typing_streak_ms == 0) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped empty typing streak to idle activity bucket");
-        return ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
-    }
-
-    if (typing_streak_ms <= 2000) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped typing streak %u ms to 2s activity bucket",
-                                 (unsigned int)typing_streak_ms);
-        return ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S;
-    }
-
-    if (typing_streak_ms <= 5000) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped typing streak %u ms to 5s activity bucket",
-                                 (unsigned int)typing_streak_ms);
-        return ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_5S;
-    }
-
-    if (typing_streak_ms <= 10000) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped typing streak %u ms to 10s activity bucket",
-                                 (unsigned int)typing_streak_ms);
-        return ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_10S;
-    }
-
-    ZMK_DUAL_DISPLAY_LOG_DBG("mapped typing streak %u ms to capped 15s activity bucket",
-                             (unsigned int)typing_streak_ms);
-    return ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S;
-}
-
 enum zmk_dual_display_battery_bucket zmk_dual_display_battery_bucket_from_percent(
     int16_t percent, bool charging) {
     if (percent < 0 || percent > 100) {

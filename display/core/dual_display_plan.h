@@ -87,7 +87,7 @@ struct zmk_dual_display_animation_plan {
     struct zmk_dual_display_rect bounds;
     enum zmk_dual_display_scene_variant variant;
     enum zmk_dual_display_scene_kind scene;
-    enum zmk_dual_display_activity_bucket activity;
+    enum zmk_dual_display_activity_state activity;
     enum zmk_dual_display_layer_mode layer;
     enum zmk_dual_display_energy_level energy;
     bool charging;

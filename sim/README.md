@@ -39,7 +39,8 @@ The simulator accepts interactive commands on stdin. Useful commands:
 - `show`
 - `battery left 8`
 - `battery right 80 charging`
-- `activity left 6000`
+- `activity left typing`
+- `activity left idle`
 - `sleep right on`
 - `split left disconnected`
 - `transport left usb`

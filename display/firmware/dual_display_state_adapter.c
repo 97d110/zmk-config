@@ -51,7 +51,6 @@ static struct zmk_dual_display_state firmware_state;
 static bool firmware_state_ready;
 static bool typing_period_active;
 static bool typing_period_had_keypress;
-static uint32_t typing_activity_seconds;
 
 static void firmware_render_work_cb(struct k_work *work);
 static void typing_activity_work_cb(struct k_work *work);
@@ -60,7 +59,7 @@ K_MUTEX_DEFINE(firmware_state_mutex);
 K_WORK_DEFINE(firmware_render_work, firmware_render_work_cb);
 K_WORK_DELAYABLE_DEFINE(typing_activity_work, typing_activity_work_cb);
 
-#define TYPING_ACTIVITY_PERIOD K_SECONDS(1)
+#define TYPING_CHECK_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS)
 
 static bool states_equal(const struct zmk_dual_display_state *left,
                          const struct zmk_dual_display_state *right) {
@@ -78,20 +77,20 @@ static bool current_usb_powered(void) {
 #endif
 }
 
-static enum zmk_dual_display_activity_bucket
-activity_bucket_from_zmk(enum zmk_activity_state activity) {
+static enum zmk_dual_display_activity_state
+activity_state_from_zmk(enum zmk_activity_state activity) {
     switch (activity) {
     case ZMK_ACTIVITY_ACTIVE:
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped ZMK active activity to typing display bucket");
-        return ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S;
+        ZMK_DUAL_DISPLAY_LOG_DBG("mapped ZMK active activity to typing display state");
+        return ZMK_DUAL_DISPLAY_ACTIVITY_TYPING;
     case ZMK_ACTIVITY_IDLE:
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped ZMK idle activity to idle display bucket");
+        ZMK_DUAL_DISPLAY_LOG_DBG("mapped ZMK idle activity to idle display state");
         return ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
     case ZMK_ACTIVITY_SLEEP:
-        ZMK_DUAL_DISPLAY_LOG_DBG("mapped ZMK sleep activity to sleep display bucket");
+        ZMK_DUAL_DISPLAY_LOG_DBG("mapped ZMK sleep activity to sleep display state");
         return ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP;
     default:
-        ZMK_DUAL_DISPLAY_LOG_WRN("mapped unknown ZMK activity %d to idle display bucket",
+        ZMK_DUAL_DISPLAY_LOG_WRN("mapped unknown ZMK activity %d to idle display state",
                                  activity);
         return ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
     }
@@ -139,7 +138,6 @@ static bool record_typing_keypress_locked(void) {
 
     if (!typing_period_active) {
         typing_period_active = true;
-        typing_activity_seconds = 0;
         return true;
     }
 
@@ -150,7 +148,6 @@ static bool record_typing_keypress_locked(void) {
 static void reset_typing_activity_locked(void) {
     typing_period_active = false;
     typing_period_had_keypress = false;
-    typing_activity_seconds = 0;
 }
 
 static const char *role_name(enum zmk_dual_display_role role) {
@@ -185,20 +182,14 @@ static const char *battery_name(enum zmk_dual_display_battery_bucket battery) {
     }
 }
 
-static const char *activity_name(enum zmk_dual_display_activity_bucket activity) {
+static const char *activity_name(enum zmk_dual_display_activity_state activity) {
     switch (activity) {
     case ZMK_DUAL_DISPLAY_ACTIVITY_IDLE:
         return "idle";
     case ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP:
         return "sleep";
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_2S:
-        return "typing_2s";
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_5S:
-        return "typing_5s";
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_10S:
-        return "typing_10s";
-    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING_15S:
-        return "typing_15s";
+    case ZMK_DUAL_DISPLAY_ACTIVITY_TYPING:
+        return "typing";
     default:
         return "unknown";
     }
@@ -247,18 +238,19 @@ static const char *layer_name(enum zmk_dual_display_layer_mode layer) {
 }
 
 static void log_complete_state(const char *reason, const struct zmk_dual_display_state *state,
-                               uint32_t typing_seconds, bool period_had_keypress) {
+                               bool period_had_keypress) {
     if (state == NULL) {
         ZMK_DUAL_DISPLAY_LOG_WRN("cannot log complete display state without state");
         return;
     }
 
     ZMK_DUAL_DISPLAY_LOG_DBG(
-        "complete display state: reason=%s side=%s role=%s battery=%s activity=%s transport=%s split=%s layer=%s typing_seconds=%u period_keypress=%d",
+        "complete display state: reason=%s side=%s role=%s battery=%s activity=%s transport=%s split=%s layer=%s period_ms=%d period_keypress=%d",
         reason, zmk_dual_display_side_name(state->side), role_name(state->role),
         battery_name(state->battery), activity_name(state->activity),
         transport_name(state->transport), split_link_name(state->split_link),
-        layer_name(state->layer), (unsigned int)typing_seconds, period_had_keypress);
+        layer_name(state->layer), CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS,
+        period_had_keypress);
 }
 
 static enum zmk_dual_display_split_link_state current_split_link_state(void) {
@@ -274,7 +266,7 @@ static enum zmk_dual_display_split_link_state current_split_link_state(void) {
 
 static void overlay_current_zmk_state(struct zmk_dual_display_state *state) {
     state->battery = current_battery_bucket();
-    state->activity = activity_bucket_from_zmk(zmk_activity_get_state());
+    state->activity = activity_state_from_zmk(zmk_activity_get_state());
     state->split_link = current_split_link_state();
 
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
@@ -322,7 +314,7 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
         if (cancel_typing_cycle != NULL) {
             *cancel_typing_cycle = true;
         }
-        state->activity = activity_bucket_from_zmk(activity->state);
+        state->activity = activity_state_from_zmk(activity->state);
         ZMK_DUAL_DISPLAY_LOG_DBG("applied activity event to display state");
         return true;
     }
@@ -434,7 +426,6 @@ static void typing_activity_work_cb(struct k_work *work) {
     bool period_had_keypress;
     bool changed = false;
     bool reschedule = false;
-    uint32_t typing_seconds;
 
     k_mutex_lock(&firmware_state_mutex, K_FOREVER);
 
@@ -444,20 +435,23 @@ static void typing_activity_work_cb(struct k_work *work) {
 
     if (typing_period_active && period_had_keypress) {
         typing_period_had_keypress = false;
-        typing_activity_seconds++;
-        typing_seconds = typing_activity_seconds;
-        next.activity = zmk_dual_display_activity_bucket_from_typing_streak(
-            typing_activity_seconds * 1000U, false);
+        next.activity = ZMK_DUAL_DISPLAY_ACTIVITY_TYPING;
         changed = !states_equal(&previous, &next);
         if (changed) {
             firmware_state = next;
         }
         reschedule = true;
-        log_complete_state("typing-period-complete", &next, typing_seconds, period_had_keypress);
+        log_complete_state("typing-period-complete", &next, period_had_keypress);
     } else {
-        typing_seconds = typing_activity_seconds;
         reset_typing_activity_locked();
-        log_complete_state("typing-decay-pending", &next, typing_seconds, period_had_keypress);
+        if (next.activity == ZMK_DUAL_DISPLAY_ACTIVITY_TYPING) {
+            next.activity = ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
+        }
+        changed = !states_equal(&previous, &next);
+        if (changed) {
+            firmware_state = next;
+        }
+        log_complete_state("typing-return-idle", &next, period_had_keypress);
     }
 
     k_mutex_unlock(&firmware_state_mutex);
@@ -473,7 +467,7 @@ static void typing_activity_work_cb(struct k_work *work) {
     if (reschedule) {
         const int err =
             k_work_schedule_for_queue(zmk_display_work_q(), &typing_activity_work,
-                                      TYPING_ACTIVITY_PERIOD);
+                                      TYPING_CHECK_PERIOD);
         if (err < 0) {
             ZMK_DUAL_DISPLAY_LOG_WRN("failed to schedule typing activity period: err=%d", err);
         }
@@ -522,7 +516,7 @@ static int firmware_state_listener_cb(const zmk_event_t *eh) {
         } else {
             const int err =
                 k_work_schedule_for_queue(zmk_display_work_q(), &typing_activity_work,
-                                          TYPING_ACTIVITY_PERIOD);
+                                          TYPING_CHECK_PERIOD);
             if (err < 0) {
                 ZMK_DUAL_DISPLAY_LOG_WRN("failed to start typing activity cycle: err=%d", err);
             }

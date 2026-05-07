@@ -22,7 +22,7 @@ DEFAULT_STATE = {
     "left": {
         "battery": 100,
         "charging": False,
-        "activity": 0,
+        "activity": "idle",
         "sleep": False,
         "split": "unknown",
         "transport": "unknown",
@@ -31,7 +31,7 @@ DEFAULT_STATE = {
     "right": {
         "battery": 100,
         "charging": False,
-        "activity": 0,
+        "activity": "idle",
         "sleep": False,
         "split": "unknown",
         "transport": "unknown",
@@ -58,7 +58,7 @@ def command_script(state: dict) -> str:
         if side_state["sleep"]:
             commands.append(f"sleep {side} on")
         else:
-            commands.append(f"activity {side} {int(side_state['activity'])}")
+            commands.append(f"activity {side} {side_state['activity']}")
     commands.append("show")
     commands.append("quit")
     return "\n".join(commands) + "\n"
@@ -97,10 +97,14 @@ def normalize_side_state(raw: dict, fallback: dict) -> dict:
     if split not in {"unknown", "connected", "disconnected"}:
         split = "unknown"
 
+    activity = raw.get("activity", fallback["activity"])
+    if not isinstance(activity, str) or activity not in {"idle", "typing"}:
+        activity = "idle"
+
     return {
         "battery": clamp_int(raw.get("battery", fallback["battery"]), 0, 100),
         "charging": bool(raw.get("charging", fallback["charging"])),
-        "activity": clamp_int(raw.get("activity", fallback["activity"]), 0, 15000),
+        "activity": activity,
         "sleep": bool(raw.get("sleep", fallback["sleep"])),
         "split": split,
         "transport": transport,
@@ -297,8 +301,10 @@ def page_html() -> str:
             <label>Battery
               <input data-side="${{side}}" data-key="battery" type="number" min="0" max="100" value="${{s.battery}}">
             </label>
-            <label>Activity ms
-              <input data-side="${{side}}" data-key="activity" type="number" min="0" max="15000" step="250" value="${{s.activity}}">
+            <label>Activity
+              <select data-side="${{side}}" data-key="activity">
+                ${{["idle", "typing"].map(v => `<option value="${{v}}" ${{s.activity === v ? "selected" : ""}}>${{v}}</option>`).join("")}}
+              </select>
             </label>
           </div>
           <div class="grid2">

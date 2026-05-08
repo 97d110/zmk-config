@@ -11,6 +11,8 @@ without rewriting the core.
 - `display/render/lvgl/` owns the firmware LVGL adapter boundary and the ZMK
   `zmk_display_status_screen()` entry point, renderer contract, and viewport
   mapping.
+- `display/render/theme/` owns LVGL-free theme interpretation and renderer-
+  local animation state that can be shared by firmware and simulator builds.
 - `display/firmware/` owns ZMK event/state adapters that translate firmware
   runtime sources into the durable `display/core/` state model.
 - `display/assets/` is reserved for durable asset registries and final or
@@ -25,6 +27,8 @@ without rewriting the core.
   and bottom edges are short, and the left and right edges are long.
 - Temporary code must not define the engine's public model. If a field or enum
   is needed by core planning, name it generically and keep it in `display/core/`.
+  If a value describes theme timing, phase, or frame progression, keep it behind
+  `display/render/theme/`.
 
 ## Deletion Rule
 

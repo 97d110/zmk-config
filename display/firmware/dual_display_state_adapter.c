@@ -51,15 +51,19 @@ static struct zmk_dual_display_state firmware_state;
 static bool firmware_state_ready;
 static bool typing_period_active;
 static bool typing_period_had_keypress;
+static bool theme_refresh_loop_active;
 
 static void firmware_render_work_cb(struct k_work *work);
+static void theme_refresh_work_cb(struct k_work *work);
 static void typing_activity_work_cb(struct k_work *work);
 
 K_MUTEX_DEFINE(firmware_state_mutex);
 K_WORK_DEFINE(firmware_render_work, firmware_render_work_cb);
+K_WORK_DELAYABLE_DEFINE(theme_refresh_work, theme_refresh_work_cb);
 K_WORK_DELAYABLE_DEFINE(typing_activity_work, typing_activity_work_cb);
 
 #define TYPING_CHECK_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS)
+#define THEME_REFRESH_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS)
 
 static bool states_equal(const struct zmk_dual_display_state *left,
                          const struct zmk_dual_display_state *right) {
@@ -366,6 +370,7 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
         if (start_typing_cycle != NULL && record_typing_keypress_locked()) {
             *start_typing_cycle = true;
         }
+        state->activity = ZMK_DUAL_DISPLAY_ACTIVITY_TYPING;
         return true;
     }
 
@@ -404,18 +409,76 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
     return false;
 }
 
-static void firmware_render_work_cb(struct k_work *work) {
-    ARG_UNUSED(work);
-
+static void latest_firmware_state(struct zmk_dual_display_state *out_state) {
     struct zmk_dual_display_state state;
+
     k_mutex_lock(&firmware_state_mutex, K_FOREVER);
     state = firmware_state;
     k_mutex_unlock(&firmware_state_mutex);
 
+    *out_state = state;
+}
+
+static void schedule_theme_refresh_from_last_render(const char *reason) {
+    uint32_t delay_ms = 0;
+    const bool wants_next_frame = zmk_dual_display_status_screen_next_frame_delay(&delay_ms);
+
+    if (!wants_next_frame) {
+        const int cancel_err = k_work_cancel_delayable(&theme_refresh_work);
+        ARG_UNUSED(cancel_err);
+        if (theme_refresh_loop_active) {
+            theme_refresh_loop_active = false;
+            ZMK_DUAL_DISPLAY_LOG_DBG("theme refresh loop stopped: reason=%s", reason);
+        }
+        return;
+    }
+
+    ARG_UNUSED(delay_ms);
+    const int err = k_work_reschedule_for_queue(zmk_display_work_q(), &theme_refresh_work,
+                                                THEME_REFRESH_PERIOD);
+    if (err < 0) {
+        ZMK_DUAL_DISPLAY_LOG_WRN("failed to schedule theme refresh: reason=%s err=%d", reason,
+                                 err);
+        return;
+    }
+
+    if (!theme_refresh_loop_active) {
+        theme_refresh_loop_active = true;
+        ZMK_DUAL_DISPLAY_LOG_DBG("theme refresh loop started: reason=%s period_ms=%d", reason,
+                                 CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS);
+    }
+}
+
+static int render_latest_firmware_state(const char *reason) {
+    struct zmk_dual_display_state state;
+    latest_firmware_state(&state);
+
     const int err = zmk_dual_display_status_screen_update_from_state(&state);
     if (err < 0) {
-        ZMK_DUAL_DISPLAY_LOG_WRN("display state refresh did not render: err=%d", err);
+        ZMK_DUAL_DISPLAY_LOG_WRN("display refresh did not render: reason=%s err=%d", reason,
+                                 err);
+        return err;
     }
+
+    schedule_theme_refresh_from_last_render(reason);
+    return 0;
+}
+
+void zmk_dual_display_firmware_schedule_theme_refresh(uint32_t delay_ms) {
+    ARG_UNUSED(delay_ms);
+    schedule_theme_refresh_from_last_render("initial-screen");
+}
+
+static void firmware_render_work_cb(struct k_work *work) {
+    ARG_UNUSED(work);
+
+    (void)render_latest_firmware_state("state-event");
+}
+
+static void theme_refresh_work_cb(struct k_work *work) {
+    ARG_UNUSED(work);
+
+    (void)render_latest_firmware_state("theme-frame");
 }
 
 static void typing_activity_work_cb(struct k_work *work) {
@@ -458,7 +521,7 @@ static void typing_activity_work_cb(struct k_work *work) {
 
     if (changed) {
         zmk_dual_display_log_state_transition(&previous, &next);
-        const int err = zmk_dual_display_status_screen_update_from_state(&next);
+        const int err = render_latest_firmware_state("typing-activity");
         if (err < 0) {
             ZMK_DUAL_DISPLAY_LOG_WRN("typing activity refresh did not render: err=%d", err);
         }

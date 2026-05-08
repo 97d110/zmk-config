@@ -18,6 +18,7 @@ LOG_MODULE_REGISTER(zmk_dual_display, CONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_LOG_L
 #include <display/render/lvgl/viewport.h>
 
 static lv_obj_t *status_screen;
+static struct zmk_dual_display_render_result last_render_result;
 
 static enum zmk_dual_display_side current_firmware_side(void) {
 #if IS_ENABLED(CONFIG_BOARD_EYELASH_SOFLE_RIGHT)
@@ -53,7 +54,7 @@ static int render_state_to_screen(lv_obj_t *screen, const struct zmk_dual_displa
     }
 
     LOG_DBG("rendering %s dual display screen plan", zmk_dual_display_side_name(plan.side));
-    zmk_dual_display_lvgl_render_screen_plan(screen, &plan);
+    last_render_result = zmk_dual_display_lvgl_render_screen_plan(screen, &plan);
 
     return 0;
 }
@@ -67,6 +68,18 @@ int zmk_dual_display_status_screen_update_from_state(
 
     LOG_DBG("refreshing dual display status screen from firmware state");
     return render_state_to_screen(status_screen, state, true);
+}
+
+bool zmk_dual_display_status_screen_next_frame_delay(uint32_t *out_delay_ms) {
+    if (last_render_result.wants_next_frame && out_delay_ms != NULL) {
+        *out_delay_ms = last_render_result.next_delay_ms;
+    }
+
+    return last_render_result.wants_next_frame;
+}
+
+struct zmk_dual_display_render_result zmk_dual_display_status_screen_last_render_result(void) {
+    return last_render_result;
 }
 
 lv_obj_t *zmk_display_status_screen(void) {
@@ -97,6 +110,9 @@ lv_obj_t *zmk_display_status_screen(void) {
 
     status_screen = screen;
     LOG_INF("created %s dual display status screen", zmk_dual_display_side_name(side));
+    if (last_render_result.wants_next_frame) {
+        zmk_dual_display_firmware_schedule_theme_refresh(last_render_result.next_delay_ms);
+    }
 
     return screen;
 }

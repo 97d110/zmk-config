@@ -41,6 +41,9 @@
 - `.agentic/context/display-engine-increment-5B.md`
   Handoff note for the boundary between core logical display state and future
   theme-specific animation state.
+- `.agentic/context/display-engine-increment-6.md`
+  Handoff note for the shared LVGL-free theme context, visible no-asset mock
+  theme renderer, simulator ticks, and firmware theme refresh loop.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
@@ -48,10 +51,15 @@
 - `display/render/lvgl/`
   Durable LVGL firmware adapter boundary, renderer contract, and viewport
   mapping. The current renderer contract is implemented by `display/mock/`.
+- `display/render/theme/`
+  Durable LVGL-free theme interpretation shared by firmware and simulator
+  builds. Owns renderer-local frame ticks, typing phase, and decay state.
 - `display/firmware/`
   Durable ZMK firmware state adapter. It maps runtime battery, activity,
   keypress, endpoint, layer, USB, BLE, and split-link sources into
   `display/core/` state and queues refreshes on the ZMK display work queue.
+  It also runs the bounded theme refresh loop while renderer-local state wants
+  another frame.
 - `display/mock/`
   Temporary proof-of-concept placeholder rendering. It must preserve the
   portrait display contract and should be easy to replace or delete.
@@ -66,6 +74,11 @@
   Durable technical explanation of the firmware animation-control path,
   including ZMK event entry points, state lifecycle, configurable typing
   activity cycle, render lifecycle, and a complete system wiring diagram.
+- `docs/.meta/zmk_dual_display_animation_theme_tech_spec_v5.md`
+  Current v5 animation-theme planning spec. It summarizes implemented
+  display-engine increments, preserves the lean core activity model, defines
+  theme-local typing phases, lays out deployable future increments, and
+  documents the animation asset organization contract.
 
 ## Ownership Boundaries
 
@@ -76,4 +89,4 @@
 - Future local display-engine work should stay local to this repo and must not reintroduce donor repos as runtime dependencies.
 - Display-engine code changes must follow `.agentic/context/display-engine-logging-convention.md`.
 - Planning and code changes must follow `.agentic/context/code-organization-convention.md`.
-- The planned display-engine boundary is `display/core/`, `display/firmware/`, `display/render/lvgl/`, `display/assets/`, and `sim/`; see `context/display-engine-increment-0.md` before changing display wiring.
+- The planned display-engine boundary is `display/core/`, `display/firmware/`, `display/render/lvgl/`, `display/render/theme/`, `display/assets/`, and `sim/`; see `context/display-engine-increment-0.md` before changing display wiring.

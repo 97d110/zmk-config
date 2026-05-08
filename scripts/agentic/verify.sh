@@ -21,6 +21,7 @@ required_files=(
   ".agentic/context/display-engine-increment-5.md"
   ".agentic/context/display-engine-increment-5A.md"
   ".agentic/context/display-engine-increment-5B.md"
+  ".agentic/context/display-engine-increment-6.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -50,6 +51,9 @@ required_files=(
   "display/render/lvgl/dual_display_status_screen.c"
   "display/render/lvgl/viewport.c"
   "display/render/lvgl/viewport.h"
+  "display/render/theme/README.md"
+  "display/render/theme/dual_display_theme.c"
+  "display/render/theme/dual_display_theme.h"
   "sim/Makefile"
   "sim/README.md"
   "sim/dual_display_sim.c"
@@ -129,6 +133,7 @@ require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_
 require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
 require_match 'display/core/dual_display_state.c' 'CMakeLists.txt'
 require_match 'display/firmware/dual_display_state_adapter.c' 'CMakeLists.txt'
+require_match 'display/render/theme/dual_display_theme.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'zmk_dual_display_firmware_init_state' 'display/render/lvgl/dual_display_status_screen.c'
@@ -148,12 +153,16 @@ require_match 'record_typing_keypress_locked' 'display/firmware/dual_display_sta
 require_match 'complete display state' 'display/firmware/dual_display_state_adapter.c'
 require_match 'typing-return-idle' 'display/firmware/dual_display_state_adapter.c'
 require_match 'CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
+require_match 'CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
+require_match 'K_WORK_DELAYABLE_DEFINE\(theme_refresh_work' 'display/firmware/dual_display_state_adapter.c'
+require_match 'zmk_dual_display_status_screen_next_frame_delay' 'display/firmware/dual_display_state_adapter.c'
 require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
 require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING' 'display/core/dual_display_state.h'
 require_match 'enum zmk_dual_display_activity_state activity' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_log_state_transition' 'display/core/dual_display_state.c'
 require_match 'mapped invalid battery percent' 'display/core/dual_display_state.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER' 'Kconfig'
+require_match 'ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS' 'Kconfig'
 require_match 'display/mock/lvgl/placeholder_renderer.c' 'CMakeLists.txt'
 require_match 'display/render/lvgl/viewport.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
@@ -177,14 +186,22 @@ require_match 'typing-return-idle' '.agentic/context/display-engine-increment-5A
 require_match 'Display Engine Increment 5\.B Handoff' '.agentic/context/display-engine-increment-5B.md'
 require_match 'core logical display state' '.agentic/context/display-engine-increment-5B.md'
 require_match 'theme animation state' '.agentic/context/display-engine-increment-5B.md'
+require_match 'Display Engine Increment 6 Handoff' '.agentic/context/display-engine-increment-6.md'
+require_match 'display/render/theme/' '.agentic/context/display-engine-increment-6.md'
 require_match 'display/firmware/' 'display/README.md'
 require_match 'dual display simulator' 'sim/dual_display_sim.c'
 require_match '\-\-batch' 'sim/dual_display_sim.c'
+require_match 'tick <count>' 'sim/dual_display_sim.c'
+require_match 'zmk_dual_display_theme_context_observe_plan' 'sim/dual_display_sim.c'
 require_match 'dual display web simulator' 'sim/web/app.py'
 require_match 'docker-run' 'sim/web/Makefile'
 require_match 'dual_display_sim --batch' 'sim/README.md'
 require_match 'zmk_dual_display_build_dual_plan_from_state' 'sim/dual_display_sim.c'
 require_match 'display/core/dual_display_plan.c' 'sim/Makefile'
+require_match 'display/render/theme/dual_display_theme.c' 'sim/Makefile'
+require_match 'struct zmk_dual_display_theme_context' 'display/render/theme/dual_display_theme.h'
+require_match 'ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_PEAK' 'display/render/theme/dual_display_theme.h'
+require_match 'wants_next_frame' 'display/render/lvgl/screen_renderer.h'
 require_match 'ZMK_DUAL_DISPLAY_SIM_LOG' 'display/log.h'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
 require_match 'ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height' 'display/render/lvgl/viewport.c'

@@ -11,6 +11,7 @@
 
 #include <display/core/dual_display_plan.h>
 #include <display/core/dual_display_state.h>
+#include <display/render/theme/dual_display_theme.h>
 
 #define SIM_WIDTH 20
 #define SIM_HEIGHT 22
@@ -20,6 +21,8 @@
 struct sim_state {
     struct zmk_dual_display_state left;
     struct zmk_dual_display_state right;
+    struct zmk_dual_display_theme_context left_theme;
+    struct zmk_dual_display_theme_context right_theme;
 };
 
 static const char *scene_name(enum zmk_dual_display_scene_kind scene) {
@@ -89,9 +92,40 @@ static char status_value_char(enum zmk_dual_display_status_slot_value value) {
     }
 }
 
-static char scene_fill_char(const struct zmk_dual_display_animation_plan *plan, uint8_t row,
+static uint8_t sim_phase_intensity(enum zmk_dual_display_theme_phase phase) {
+    switch (phase) {
+    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_LIGHT:
+        return 1;
+    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_MEDIUM:
+        return 2;
+    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_HIGH:
+        return 3;
+    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_PEAK:
+        return 4;
+    case ZMK_DUAL_DISPLAY_THEME_PHASE_DECAY:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static uint8_t sim_energy_intensity(enum zmk_dual_display_energy_level energy) {
+    switch (energy) {
+    case ZMK_DUAL_DISPLAY_ENERGY_LOW:
+        return 1;
+    case ZMK_DUAL_DISPLAY_ENERGY_MEDIUM:
+        return 2;
+    case ZMK_DUAL_DISPLAY_ENERGY_HIGH:
+        return 3;
+    default:
+        return 0;
+    }
+}
+
+static char theme_fill_char(const struct zmk_dual_display_animation_plan *plan,
+                            const struct zmk_dual_display_theme_snapshot *theme, uint8_t row,
                             uint8_t col) {
-    switch (plan->scene) {
+    switch (theme->scene) {
     case ZMK_DUAL_DISPLAY_SCENE_SLEEP:
         return '#';
     case ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR:
@@ -100,18 +134,41 @@ static char scene_fill_char(const struct zmk_dual_display_animation_plan *plan, 
         return ((row / 2) + (col / 3)) % 2 == 0 ? '?' : ' ';
     case ZMK_DUAL_DISPLAY_SCENE_NORMAL:
     default:
-        if (row == 4 || row == 12 || row == 17) {
-            return '-';
+        if (plan->layer == ZMK_DUAL_DISPLAY_LAYER_SYMBOL && row % 5 == 0) {
+            return '=';
         }
-        if ((plan->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_PRIMARY && col == 4) ||
-            (plan->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_SECONDARY && col == 15)) {
-            return '|';
+        if (plan->layer == ZMK_DUAL_DISPLAY_LAYER_MOD && (row + col) % 11 == 0) {
+            return 'o';
+        }
+        if (plan->layer == ZMK_DUAL_DISPLAY_LAYER_CONFIG && row == col / 2) {
+            return '/';
+        }
+
+        const uint8_t intensity = sim_phase_intensity(theme->phase);
+        if (theme->variant == ZMK_DUAL_DISPLAY_SCENE_VARIANT_PRIMARY) {
+            const uint8_t actor_row = (uint8_t)(6 + (theme->frame_tick % 7));
+            const uint8_t actor_col = (uint8_t)(8 + (theme->frame_tick % 4));
+            if (row == actor_row && col >= actor_col && col < actor_col + 2 + intensity) {
+                return intensity > 0 ? '*' : 'O';
+            }
+            if (intensity > 0 && row + intensity == actor_row && col < actor_col) {
+                return '~';
+            }
+        } else {
+            const uint8_t horizon = (uint8_t)(15 - sim_energy_intensity(plan->energy));
+            if (row >= horizon) {
+                return '_';
+            }
+            if (row > 9 && col > 5 && col < 14) {
+                return intensity > 0 ? '@' : '0';
+            }
         }
         return ' ';
     }
 }
 
 static void render_screen_preview(const struct zmk_dual_display_screen_plan *plan,
+                                  const struct zmk_dual_display_theme_snapshot *theme,
                                   char out[SIM_HEIGHT][SIM_WIDTH + 1]) {
     for (uint8_t y = 0; y < SIM_HEIGHT; y++) {
         for (uint8_t x = 0; x < SIM_WIDTH; x++) {
@@ -146,7 +203,8 @@ static void render_screen_preview(const struct zmk_dual_display_screen_plan *pla
 
     for (uint8_t y = SIM_STATUS_HEIGHT + 1; y < SIM_HEIGHT - 1; y++) {
         for (uint8_t x = 1; x < SIM_WIDTH - 1; x++) {
-            out[y][x] = scene_fill_char(&plan->animation, y - SIM_STATUS_HEIGHT - 1, x - 1);
+            out[y][x] = theme_fill_char(&plan->animation, theme, y - SIM_STATUS_HEIGHT - 1,
+                                        x - 1);
         }
     }
 
@@ -155,16 +213,21 @@ static void render_screen_preview(const struct zmk_dual_display_screen_plan *pla
     }
 }
 
-static void print_dual_preview(const struct zmk_dual_display_dual_plan *plan) {
+static void print_dual_preview(const struct zmk_dual_display_dual_plan *plan,
+                               const struct zmk_dual_display_theme_snapshot *left_theme,
+                               const struct zmk_dual_display_theme_snapshot *right_theme) {
     char left[SIM_HEIGHT][SIM_WIDTH + 1];
     char right[SIM_HEIGHT][SIM_WIDTH + 1];
 
-    render_screen_preview(&plan->left, left);
-    render_screen_preview(&plan->right, right);
+    render_screen_preview(&plan->left, left_theme, left);
+    render_screen_preview(&plan->right, right_theme, right);
 
-    printf("\nleft scene=%s energy=%s charging=%d | right scene=%s energy=%s charging=%d\n",
-           scene_name(plan->left.animation.scene), energy_name(plan->left.animation.energy),
-           plan->left.animation.charging, scene_name(plan->right.animation.scene),
+    printf("\nleft scene=%s phase=%s tick=%u energy=%s charging=%d | right scene=%s phase=%s tick=%u energy=%s charging=%d\n",
+           scene_name(plan->left.animation.scene),
+           zmk_dual_display_theme_phase_name(left_theme->phase), left_theme->frame_tick,
+           energy_name(plan->left.animation.energy), plan->left.animation.charging,
+           scene_name(plan->right.animation.scene),
+           zmk_dual_display_theme_phase_name(right_theme->phase), right_theme->frame_tick,
            energy_name(plan->right.animation.energy), plan->right.animation.charging);
 
     for (uint8_t y = 0; y < SIM_HEIGHT; y++) {
@@ -172,11 +235,36 @@ static void print_dual_preview(const struct zmk_dual_display_dual_plan *plan) {
     }
 }
 
-static void render_state(const struct sim_state *state) {
+static void render_state(struct sim_state *state) {
     struct zmk_dual_display_dual_plan plan;
 
     zmk_dual_display_build_dual_plan_from_state(&state->left, &state->right, &plan);
-    print_dual_preview(&plan);
+    zmk_dual_display_theme_context_observe_plan(&state->left_theme, &plan.left);
+    zmk_dual_display_theme_context_observe_plan(&state->right_theme, &plan.right);
+
+    const struct zmk_dual_display_theme_snapshot left_theme =
+        zmk_dual_display_theme_context_snapshot(&state->left_theme);
+    const struct zmk_dual_display_theme_snapshot right_theme =
+        zmk_dual_display_theme_context_snapshot(&state->right_theme);
+    print_dual_preview(&plan, &left_theme, &right_theme);
+}
+
+static void render_tick(struct sim_state *state, const char *side) {
+    struct zmk_dual_display_dual_plan plan;
+
+    zmk_dual_display_build_dual_plan_from_state(&state->left, &state->right, &plan);
+    if (side == NULL || strcmp(side, "left") == 0) {
+        zmk_dual_display_theme_context_observe_plan(&state->left_theme, &plan.left);
+    }
+    if (side == NULL || strcmp(side, "right") == 0) {
+        zmk_dual_display_theme_context_observe_plan(&state->right_theme, &plan.right);
+    }
+
+    const struct zmk_dual_display_theme_snapshot left_theme =
+        zmk_dual_display_theme_context_snapshot(&state->left_theme);
+    const struct zmk_dual_display_theme_snapshot right_theme =
+        zmk_dual_display_theme_context_snapshot(&state->right_theme);
+    print_dual_preview(&plan, &left_theme, &right_theme);
 }
 
 static struct zmk_dual_display_state *select_side(struct sim_state *state, const char *side) {
@@ -204,7 +292,8 @@ static bool parse_bool_token(const char *value, bool *out) {
 static void print_help(void) {
     puts("commands: show, battery <side> <percent> [charging], activity <side> <idle|typing>,");
     puts("          sleep <side> <on|off>, split <side> <unknown|connected|disconnected>,");
-    puts("          transport <side> <unknown|usb|bt|disconnected>, layer <side> <0-3>, quit");
+    puts("          transport <side> <unknown|usb|bt|disconnected>, layer <side> <0-3>,");
+    puts("          tick <count>|<side> <count>, quit");
 }
 
 static bool handle_command(struct sim_state *state, char *line, bool auto_render) {
@@ -225,6 +314,20 @@ static bool handle_command(struct sim_state *state, char *line, bool auto_render
     }
     if (strcmp(cmd, "show") == 0) {
         render_state(state);
+        return true;
+    }
+    if (strcmp(cmd, "tick") == 0) {
+        const char *tick_side = NULL;
+        const char *count_token = side;
+
+        if (side != NULL && (strcmp(side, "left") == 0 || strcmp(side, "right") == 0)) {
+            tick_side = side;
+            count_token = value;
+        }
+        const int count = count_token == NULL ? 1 : atoi(count_token);
+        for (int i = 0; i < count; i++) {
+            render_tick(state, tick_side);
+        }
         return true;
     }
 
@@ -300,6 +403,8 @@ int main(int argc, char **argv) {
 
     zmk_dual_display_default_state(ZMK_DUAL_DISPLAY_SIDE_LEFT, &state.left);
     zmk_dual_display_default_state(ZMK_DUAL_DISPLAY_SIDE_RIGHT, &state.right);
+    zmk_dual_display_theme_context_init(&state.left_theme, ZMK_DUAL_DISPLAY_SIDE_LEFT);
+    zmk_dual_display_theme_context_init(&state.right_theme, ZMK_DUAL_DISPLAY_SIDE_RIGHT);
 
     if (!batch) {
         puts("dual display simulator");

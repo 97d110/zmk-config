@@ -94,6 +94,10 @@ It draws placeholder status slots and animation scenes. A future real renderer
 or asset playback engine should implement the same contract without changing
 the firmware state adapter or core planner.
 
+The renderer contract returns a small render result. Firmware uses that result
+to schedule bounded redraws while renderer-local theme state has active typing
+or decay frames.
+
 ## Entry Points
 
 ### Initial State Entry
@@ -201,9 +205,10 @@ On the central side, keycode events still reach the display adapter, but the
 keypress handler does minimal work:
 
 1. ignore release events,
-2. set `typing_period_had_keypress = true`,
-3. if no typing period is active, set `typing_period_active = true`,
-4. schedule the first delayed work item using
+2. set semantic display activity to `typing`,
+3. set `typing_period_had_keypress = true`,
+4. if no typing period is active, set `typing_period_active = true`,
+5. schedule the first delayed work item using
    `CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS`.
 
 The keypress path does not:
@@ -211,7 +216,7 @@ The keypress path does not:
 - calculate animation frames,
 - calculate a typing streak from timestamps,
 - log every key,
-- queue a display redraw directly.
+- store theme phase or decay state in core state.
 
 ### Typing Check Period
 
@@ -224,7 +229,6 @@ keypresses:
 - If the period had a keypress:
   - keep semantic activity set to `typing`,
   - log the complete display state,
-  - redraw only if the display state changed,
   - schedule the next typing check period.
 - If the period had no keypress:
   - reset the active typing period fields,
@@ -249,7 +253,11 @@ The normal event render path is:
 6. Render work calls
    `zmk_dual_display_status_screen_update_from_state()`.
 7. The LVGL boundary rebuilds the screen plan from state.
-8. The renderer contract draws the plan.
+8. The renderer contract draws the plan and returns whether theme-local state
+   wants another frame.
+9. If another frame is requested, the firmware adapter schedules
+   `theme_refresh_work`; that work redraws from the latest stored firmware
+   state without requiring a new ZMK event.
 
 Typing period work is similar, but it is driven by a delayed configurable check
 cycle instead of a direct ZMK state event.
@@ -287,6 +295,7 @@ flowchart TD
         Compare["states_equal(previous, next)"]
         KeyFlag["typing_period_had_keypress = true"]
         TypingWork["typing_activity_work_cb()<br/>configured delayed work"]
+        ThemeWork["theme_refresh_work_cb()<br/>renderer requested frame"]
         CompleteLog["complete display state log"]
         RenderWork["firmware_render_work"]
     end
@@ -305,6 +314,7 @@ flowchart TD
 
     subgraph Renderer["Renderer implementation"]
         Contract["screen_renderer.h contract"]
+        Theme["display/render/theme<br/>theme context"]
         Mock["display/mock/lvgl placeholder renderer"]
         Future["future real asset / animation renderer"]
     end
@@ -345,6 +355,7 @@ flowchart TD
     Compare -->|"no visual change"| CompleteLog
 
     KeyEvt -->|"press only"| KeyFlag
+    KeyEvt -->|"press sets typing"| Mapping
     KeyFlag -->|"starts if inactive"| TypingWork
     TypingWork -->|"period had keypress"| Mapping
     TypingWork --> CompleteLog
@@ -355,10 +366,13 @@ flowchart TD
     TypingWork -->|"no keypress"| Stop["stop; idle"]
 
     RenderWork --> Refresh
+    ThemeWork --> Refresh
     Refresh --> Plan
     Plan --> Scene
     Scene --> Contract
-    Contract --> Mock
+    Contract -->|"wants next frame"| ThemeWork
+    Contract --> Theme
+    Theme --> Mock
     Contract -. "same contract later" .-> Future
     Mock --> Viewport
     Future --> Viewport
@@ -376,6 +390,8 @@ Important runtime logs include:
 - state transition logs when a display field changes,
 - no-op logs for handled events that do not change the visual state,
 - once-per-period complete state logs from the typing lifecycle,
+- theme scene entry and phase-change logs,
+- theme refresh-loop start and stop logs,
 - render queueing and refresh failures.
 
 The typing lifecycle intentionally avoids per-key debug logs. The complete

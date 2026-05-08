@@ -6,6 +6,7 @@ This directory keeps the minimum operational context needed to work efficiently 
 - `context/display-engine-increment-0.md`: nice!view wiring audit and local insertion points for the dual-display scene engine.
 - `context/display-engine-increment-4.md`: Ubuntu console simulator handoff for manual dual-display state switching.
 - `context/display-engine-increment-5.md`: firmware state adapter handoff for ZMK event-driven display refreshes.
+- `context/display-engine-increment-6.md`: shared theme context, visible mock theme state, and theme-driven refresh handoff.
 - `commands.md`: canonical local commands for verification, flashing, and debug logging.
 - `checklists/change.md`: default handoff checklist.
 - `tasks/TEMPLATE.md`: short task template for future work items.

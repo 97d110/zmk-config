@@ -11,6 +11,10 @@ Firmware event adapters refresh the active screen through
 renderer-boundary entry point; event-source mapping belongs under
 `display/firmware/`.
 
+The renderer contract returns whether the renderer-local theme wants another
+frame. Firmware uses that result to schedule bounded theme refresh work without
+changing the core display state model.
+
 Renderer code must preserve the portrait display contract from `display/core/`:
 top and bottom edges are short, left and right edges are long, and the status
 bar belongs on the narrow top edge.
@@ -19,6 +23,10 @@ During increment 1, the `screen_renderer.h` contract is implemented by
 `display/mock/lvgl/` because the visuals are temporary placeholders. Future
 increments should replace that provider with real LVGL rendering or animation
 playback while keeping the screen-entry logic here.
+
+Theme interpretation lives in `display/render/theme/` so the simulator and
+firmware share the same phase and tick behavior without making that state part
+of `display/core/`.
 
 This directory should not accumulate throwaway placeholder geometry. If a shape
 exists only to prove layout, put it under `display/mock/`.

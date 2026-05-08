@@ -8,6 +8,13 @@
 #include <lvgl.h>
 
 #include <display/core/dual_display_plan.h>
+#include <display/render/theme/dual_display_theme.h>
+
+struct zmk_dual_display_render_result {
+    bool wants_next_frame;
+    uint32_t next_delay_ms;
+    struct zmk_dual_display_theme_snapshot theme;
+};
 
 /*
  * Durable LVGL renderer contract.
@@ -16,5 +23,5 @@
  * temporary placeholder geometry. Real rendering should replace that provider
  * while keeping this entry point stable for the firmware status screen.
  */
-void zmk_dual_display_lvgl_render_screen_plan(
+struct zmk_dual_display_render_result zmk_dual_display_lvgl_render_screen_plan(
     lv_obj_t *screen, const struct zmk_dual_display_screen_plan *plan);

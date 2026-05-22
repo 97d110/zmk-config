@@ -6,7 +6,7 @@ animation region visibly reflect renderer-local theme state.
 ## What Changed
 
 - Added `display/render/theme/`, an LVGL-free theme layer shared by firmware and
-  simulator builds.
+  host simulator builds.
 - Added a theme context and snapshot that derive frame ticks, typing phase,
   short idle decay, scene, layer, energy, and charging interpretation from the
   existing core screen plan.
@@ -19,8 +19,17 @@ animation region visibly reflect renderer-local theme state.
   firmware state while the theme reports active animation work.
 - Keydown events now move display activity to semantic `typing` immediately;
   the existing quiet-period work still owns the return to `idle`.
-- Updated the simulator to compile the shared theme layer and support `tick`
-  commands so theme-only changes can be previewed without core state changes.
+- Replaced the old terminal/manual simulator path with a browser canvas
+  simulator backed by a local Python serial bridge and a host C runner under
+  `sim/engine/`.
+- The host C runner compiles `display/core/` and `display/render/theme/` and
+  emits JSON snapshots consumed by the canvas renderer.
+- The simulator controller is now hardware-oriented: core keyboard logs feed
+  the host C engine; firmware display/theme logs remain visible diagnostics but
+  do not control canvas state.
+- The simulator tracks core key events, active layers from
+  `set_layer_state: layer_changed`, and USB-powered charging inference from
+  visible serial sources.
 
 ## Boundary
 
@@ -31,6 +40,15 @@ frame ticks, intensity, or asset identifiers.
 Theme state belongs behind `display/render/theme/`. The mock renderer consumes
 that state, but all throwaway drawing geometry stays under `display/mock/`.
 
+Simulator canvas code is a renderer only. It must not own typing lifecycle,
+layer selection, charging policy, scene selection, or theme phase progression.
+Those decisions come from the host C engine, which uses the same durable
+`display/core/` and `display/render/theme/` code as firmware-facing paths.
+
+Firmware display/theme logs such as `complete display state` and
+`theme context changed` are diagnostic comparison data in the simulator. They
+must not become simulator controllers.
+
 ## Simulation
 
 Use:
@@ -39,21 +57,20 @@ Use:
 make sim
 ```
 
-Useful commands:
+Open `http://localhost:8080`. The Python server scans `/dev/serial/by-id/*`
+and `/dev/ttyACM*`, normalizes core keyboard events, feeds them into
+`sim/engine/dual_display_engine.c`, and returns C-derived snapshots through
+`/api/serial`.
 
-```text
-activity left typing
-tick 4
-activity left idle
-tick 4
-sleep right on
-split left disconnected
-layer right 3
-battery left 80 charging
-```
+The web UI shows:
 
-`tick <count>` advances both theme contexts. `tick left <count>` or
-`tick right <count>` advances one side.
+- left and right canvas displays rendered from the host C snapshot;
+- the snapshot and serial parse counters;
+- raw firmware logs for comparison and debugging.
+
+There are intentionally no Web Serial controls and no manual state manager in
+the browser. Restart `make sim` after changing C engine or theme code so the
+host runner is rebuilt.
 
 ## Firmware Debugging
 
@@ -71,13 +88,16 @@ the core display state has not changed.
 Run:
 
 ```bash
+python3 -m py_compile sim/web/app.py
 make verify
 git diff --check
 ```
 
-Use `make sim` to inspect the browser canvas simulator. Firmware build
-validation remains GitHub Actions from commits. Never plan, suggest, or attempt
-local `west update` or `west build`.
+Use `make sim` to inspect the browser canvas simulator. A useful smoke check is
+that a key event drives the host engine through `idle -> typing-light -> decay`
+and that layer logs such as `layer_changed: layer 1 state 1` map to the symbol
+layer. Firmware build validation remains GitHub Actions from commits. Never
+plan, suggest, or attempt local `west update` or `west build`.
 
 ## Intentionally Incomplete
 
@@ -85,5 +105,8 @@ local `west update` or `west build`.
 - No final animation timing policy.
 - No cross-half synchronization clock.
 - Typing phase and decay thresholds are simple proof-of-boundary behavior for
-  the mock and simulator; later increments can tune them behind the same theme
-  API.
+  the mock, firmware, and host C simulator; later increments can tune them
+  behind the same theme API.
+- Core keyboard-log parsing in the simulator is pragmatic and should grow only
+  as needed for animation iteration. It should keep display/theme log parsing
+  diagnostic-only.

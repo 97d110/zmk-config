@@ -19,10 +19,10 @@ make verify-docker
 make sim
 ```
 
-The simulator builds the durable `display/core/` planner and shared
-`display/render/theme/` context on the host, then opens an interactive console
-preview for both screens. It prints `zmk_dual_display` diagnostics to stderr
-while state changes and `tick` commands are applied.
+The simulator serves a browser canvas app on localhost. The local Python server
+scans `/dev/serial/by-id/*` and `/dev/ttyACM*`, feeds core keyboard events into
+the host C runner built from `display/core/` and `display/render/theme/`, and
+streams C-derived snapshots to the canvas without flashing new firmware.
 
 ```bash
 make sim-web
@@ -30,15 +30,14 @@ make sim-web-docker
 make -C sim/web docker
 ```
 
-The web simulator exposes the same host simulator through a browser UI. Docker
-serves it on `http://localhost:8080` by default; override the host port with
-`SIM_WEB_PORT=<port>` from the repo root or `PORT=<port>` from `sim/web/`.
+Docker serves it on `http://localhost:8080` by default; override the host port
+with `SIM_WEB_PORT=<port>` from the repo root or `PORT=<port>` from `sim/web/`.
 
 ## Firmware Builds
 
 Firmware artifacts are built by GitHub Actions from commits using the matrix in
-`build.yaml`. Do not run local `west update` or `west build` for routine agent
-validation unless the user explicitly asks for a local build.
+`build.yaml`. Never plan, suggest, or attempt local `west update` or
+`west build` firmware builds in this repo.
 
 ## Flash And Debug Notes
 

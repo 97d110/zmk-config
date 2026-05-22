@@ -1,8 +1,10 @@
 # Display Simulator
 
-Increment 4 adds a small Ubuntu console simulator for the dual-display scene
-engine. It compiles the durable `display/core/` C sources directly and renders
-both screen plans as a compact ASCII preview.
+The simulator is a browser canvas app served from localhost. It renders the
+dual nice!view displays directly in HTML/CSS/canvas and listens to USB CDC logs
+from debug firmware through the local Python serial bridge. Keyboard events are
+fed into a host C runner built from `display/core/` and `display/render/theme/`;
+the canvas renders the C-derived snapshot.
 
 Run it from the repo root:
 
@@ -10,13 +12,7 @@ Run it from the repo root:
 make sim
 ```
 
-Or from this directory:
-
-```bash
-make run
-```
-
-Run the browser simulator locally:
+The equivalent explicit target is:
 
 ```bash
 make sim-web
@@ -34,23 +30,17 @@ Or from the Dockerfile directory:
 make -C sim/web docker
 ```
 
-The simulator accepts interactive commands on stdin. Useful commands:
+Open the page at `http://localhost:8080`. The local serial bridge scans
+`/dev/serial/by-id/*` and `/dev/ttyACM*`, so it can read whichever USB CDC
+interface is actually emitting debug logs.
 
-- `show`
-- `battery left 8`
-- `battery right 80 charging`
-- `activity left typing`
-- `activity left idle`
-- `sleep right on`
-- `split left disconnected`
-- `transport left usb`
-- `layer right 2`
-- `quit`
+The keyboard is the controller: core key/layer events from the logs drive the
+host C display/theme engine. Firmware display/theme logs remain visible for
+comparison, but they do not control the canvas state. This simulator is not a
+firmware build path and does not use local `west`.
 
-The preview is intentionally temporary and text-only. It must stay separate
-from `display/core/`; the durable contract is the shared state and plan model,
-not the ASCII renderer.
-
-The web simulator is also an adapter around the compiled C simulator. It does
-not duplicate the planner; each browser render is replayed through
-`sim/build/dual_display_sim --batch`.
+If the displays do not react, watch the `local serial` status and `serialParse`
+counter in the left log pane. `lines` increasing with `snapshots` stuck at zero
+usually means the host C engine did not start. Zero local serial ports usually
+means the keyboard is not visible to the server process or the user running
+`make sim` cannot read the tty devices.

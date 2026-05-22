@@ -72,7 +72,7 @@ settle or decay animation after core activity has already returned to `idle`.
 
 - `make verify` passed after the core refactor.
 - `git diff --check` passed after the core refactor.
-- `make sim-build` passed after simulator controls were updated.
+- The simulator path is now the browser canvas app served by `make sim`.
 
 Firmware build validation is still handled by GitHub Actions from commits.
-Do not run local `west build` unless explicitly requested.
+Never plan, suggest, or attempt local `west update` or `west build`.

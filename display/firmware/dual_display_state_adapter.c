@@ -42,7 +42,9 @@
 #if IS_ENABLED(CONFIG_ZMK_SPLIT)
 #include <zmk/events/split_peripheral_status_changed.h>
 
-#if !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#include <zmk/split/transport/central.h>
+#else
 #include <zmk/split/bluetooth/peripheral.h>
 #endif
 #endif
@@ -258,7 +260,50 @@ static void log_complete_state(const char *reason, const struct zmk_dual_display
 }
 
 static enum zmk_dual_display_split_link_state current_split_link_state(void) {
-#if IS_ENABLED(CONFIG_ZMK_SPLIT) && !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#if IS_ENABLED(CONFIG_ZMK_SPLIT) && IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+    bool has_available_transport = false;
+    bool has_disconnected_transport = false;
+
+    STRUCT_SECTION_FOREACH(zmk_split_transport_central, transport) {
+        if (transport->api == NULL || transport->api->get_status == NULL) {
+            ZMK_DUAL_DISPLAY_LOG_DBG(
+                "central split transport has no status API, assuming connected");
+            return ZMK_DUAL_DISPLAY_SPLIT_LINK_CONNECTED;
+        }
+
+        const struct zmk_split_transport_status status = transport->api->get_status();
+        if (!status.available || !status.enabled) {
+            continue;
+        }
+
+        has_available_transport = true;
+
+        switch (status.connections) {
+        case ZMK_SPLIT_TRANSPORT_CONNECTIONS_STATUS_ALL_CONNECTED:
+        case ZMK_SPLIT_TRANSPORT_CONNECTIONS_STATUS_SOME_CONNECTED:
+            ZMK_DUAL_DISPLAY_LOG_DBG(
+                "mapped central split transport status to connected: connections=%d",
+                status.connections);
+            return ZMK_DUAL_DISPLAY_SPLIT_LINK_CONNECTED;
+        case ZMK_SPLIT_TRANSPORT_CONNECTIONS_STATUS_DISCONNECTED:
+            has_disconnected_transport = true;
+            break;
+        default:
+            ZMK_DUAL_DISPLAY_LOG_WRN("unknown central split transport connection status: %d",
+                                     status.connections);
+            return ZMK_DUAL_DISPLAY_SPLIT_LINK_UNKNOWN;
+        }
+    }
+
+    if (has_available_transport && has_disconnected_transport) {
+        ZMK_DUAL_DISPLAY_LOG_DBG("mapped central split transport status to disconnected");
+        return ZMK_DUAL_DISPLAY_SPLIT_LINK_DISCONNECTED;
+    }
+
+    ZMK_DUAL_DISPLAY_LOG_DBG(
+        "central split transport status unavailable, keeping link unknown");
+    return ZMK_DUAL_DISPLAY_SPLIT_LINK_UNKNOWN;
+#elif IS_ENABLED(CONFIG_ZMK_SPLIT)
     return zmk_split_bt_peripheral_is_connected()
                ? ZMK_DUAL_DISPLAY_SPLIT_LINK_CONNECTED
                : ZMK_DUAL_DISPLAY_SPLIT_LINK_DISCONNECTED;
@@ -350,6 +395,7 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     const struct zmk_layer_state_changed *layer = as_zmk_layer_state_changed(eh);
     if (layer != NULL) {
+        state->split_link = current_split_link_state();
         state->layer = current_layer_mode();
         ZMK_DUAL_DISPLAY_LOG_DBG(
             "applied layer event to display state: layer=%u active=%d",
@@ -370,12 +416,14 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
         if (start_typing_cycle != NULL && record_typing_keypress_locked()) {
             *start_typing_cycle = true;
         }
+        state->split_link = current_split_link_state();
         state->activity = ZMK_DUAL_DISPLAY_ACTIVITY_TYPING;
         return true;
     }
 
     const struct zmk_endpoint_changed *endpoint = as_zmk_endpoint_changed(eh);
     if (endpoint != NULL) {
+        state->split_link = current_split_link_state();
         state->transport = current_transport_state();
         ZMK_DUAL_DISPLAY_LOG_DBG("applied endpoint event to display state: transport=%d",
                                  endpoint->endpoint.transport);
@@ -385,6 +433,7 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
 #if IS_ENABLED(CONFIG_ZMK_BLE)
     const struct zmk_ble_active_profile_changed *ble = as_zmk_ble_active_profile_changed(eh);
     if (ble != NULL) {
+        state->split_link = current_split_link_state();
         state->transport = current_transport_state();
         ZMK_DUAL_DISPLAY_LOG_DBG("applied BLE profile event to display state: profile=%u",
                                  (unsigned int)ble->index);

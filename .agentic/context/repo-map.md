@@ -30,8 +30,8 @@
   Handoff note for scene-kind selection, energy and charging modifiers,
   expanded animation plan, and the scene-aware mock renderer dispatch.
 - `.agentic/context/display-engine-increment-4.md`
-  Handoff note for the Ubuntu console simulator, manual state switching, and
-  host-side display-engine logging.
+  Historical handoff note for the removed host-side simulator. Current
+  simulator work uses the browser canvas app under `sim/`.
 - `.agentic/context/display-engine-increment-5.md`
   Handoff note for the firmware state adapter, ZMK event subscriptions, and
   event-driven LVGL refresh path.
@@ -61,13 +61,14 @@
   It also runs the bounded theme refresh loop while renderer-local state wants
   another frame.
 - `display/mock/`
-  Temporary proof-of-concept placeholder rendering. It must preserve the
+  Temporary proof-of-concept placeholder LVGL rendering. It must preserve the
   portrait display contract and should be easy to replace or delete.
 - `sim/`
-  Ubuntu console and browser simulator for the dual-display scene engine. It
-  compiles the durable `display/core/` sources directly, provides manual state
-  controls, and renders both screen plans as a compact preview with adjacent
-  `zmk_dual_display` logs. The Dockerized web app lives in `sim/web/`.
+  Browser canvas simulator for the dual-display scene engine. It provides
+  a local Python serial bridge for real debug firmware logs, a host C runner
+  under `sim/engine/` built from `display/core/` and `display/render/theme/`,
+  and a canvas renderer in `sim/web/`. Core keyboard events from hardware are
+  the controller; firmware display/theme logs remain diagnostics only.
 - `.agentic/troubleshooting/split-pairing.md`
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 - `docs/display-firmware-animation-flow.md`

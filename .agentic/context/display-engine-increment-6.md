@@ -72,12 +72,12 @@ Run:
 
 ```bash
 make verify
-make sim-build
 git diff --check
 ```
 
-Firmware build validation remains GitHub Actions from commits. Do not run local
-`west build` unless explicitly requested.
+Use `make sim` to inspect the browser canvas simulator. Firmware build
+validation remains GitHub Actions from commits. Never plan, suggest, or attempt
+local `west update` or `west build`.
 
 ## Intentionally Incomplete
 

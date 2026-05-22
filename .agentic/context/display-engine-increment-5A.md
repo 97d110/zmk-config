@@ -62,7 +62,7 @@ Typing now follows this cycle:
 
 - `make verify` passed.
 - `git diff --check` passed.
-- `make sim-build` was run after the firmware adapter change and passed.
+- The simulator path is now the browser canvas app served by `make sim`.
 
 Firmware build validation is still handled by GitHub Actions from commits.
-Do not run local `west build` unless explicitly requested.
+Never plan, suggest, or attempt local `west update` or `west build`.

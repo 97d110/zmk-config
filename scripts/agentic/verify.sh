@@ -54,9 +54,8 @@ required_files=(
   "display/render/theme/README.md"
   "display/render/theme/dual_display_theme.c"
   "display/render/theme/dual_display_theme.h"
-  "sim/Makefile"
   "sim/README.md"
-  "sim/dual_display_sim.c"
+  "sim/engine/dual_display_engine.c"
   "sim/web/app.py"
   "sim/web/Dockerfile"
   "sim/web/Makefile"
@@ -77,6 +76,23 @@ fail() {
   exit 1
 }
 
+search_match() {
+  local pattern="$1"
+  local path="$2"
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -q --multiline "$pattern" "$ROOT_DIR/$path"
+    return $?
+  fi
+
+  if printf 'test' | grep -Pzq 't' >/dev/null 2>&1; then
+    grep -Pzq "$pattern" "$ROOT_DIR/$path"
+    return $?
+  fi
+
+  fail "requires rg or GNU grep with PCRE support"
+}
+
 require_file() {
   local path="$1"
   [[ -f "$ROOT_DIR/$path" ]] || fail "missing file: $path"
@@ -85,13 +101,13 @@ require_file() {
 require_match() {
   local pattern="$1"
   local path="$2"
-  rg -q --multiline "$pattern" "$ROOT_DIR/$path" || fail "expected pattern '$pattern' in $path"
+  search_match "$pattern" "$path" || fail "expected pattern '$pattern' in $path"
 }
 
 require_no_match() {
   local pattern="$1"
   local path="$2"
-  if rg -q --multiline "$pattern" "$ROOT_DIR/$path"; then
+  if search_match "$pattern" "$path"; then
     fail "unexpected pattern '$pattern' in $path"
   fi
 }
@@ -189,16 +205,31 @@ require_match 'theme animation state' '.agentic/context/display-engine-increment
 require_match 'Display Engine Increment 6 Handoff' '.agentic/context/display-engine-increment-6.md'
 require_match 'display/render/theme/' '.agentic/context/display-engine-increment-6.md'
 require_match 'display/firmware/' 'display/README.md'
-require_match 'dual display simulator' 'sim/dual_display_sim.c'
-require_match '\-\-batch' 'sim/dual_display_sim.c'
-require_match 'tick <count>' 'sim/dual_display_sim.c'
-require_match 'zmk_dual_display_theme_context_observe_plan' 'sim/dual_display_sim.c'
-require_match 'dual display web simulator' 'sim/web/app.py'
+require_match 'browser canvas app' 'sim/README.md'
+require_match 'local Python serial bridge' 'sim/README.md'
+require_match 'host C runner' 'sim/README.md'
+require_match 'zmk_dual_display_theme_context_observe_plan' 'sim/engine/dual_display_engine.c'
+require_match 'zmk_dual_display_build_dual_plan_from_state' 'sim/engine/dual_display_engine.c'
+require_match 'dual display canvas simulator' 'sim/web/app.py'
+require_match 'SerialTailer' 'sim/web/app.py'
+require_match 'EngineProcess' 'sim/web/app.py'
+require_match 'KeyboardEventController' 'sim/web/app.py'
+require_match 'layer_changed' 'sim/web/app.py'
+require_match '_active_layers' 'sim/web/app.py'
+require_match '_source_sides' 'sim/web/app.py'
+require_match '_mark_usb_charging' 'sim/web/app.py'
+require_match '_apply_usb_power_from_sources' 'sim/web/app.py'
+require_match 'visible_sources' 'sim/web/app.py'
+require_match '/api/serial' 'sim/web/app.py'
+require_match 'snapshot' 'sim/web/app.py'
+require_no_match 'requestPort|navigator\.serial|manualOverride|Manual State|Connect Serial' 'sim/web/app.py'
+require_match '<canvas id="leftCanvas"' 'sim/web/app.py'
+require_match '<canvas id="rightCanvas"' 'sim/web/app.py'
+require_match 'lastKeyboardStateAt' 'sim/web/app.py'
 require_match 'docker-run' 'sim/web/Makefile'
-require_match 'dual_display_sim --batch' 'sim/README.md'
-require_match 'zmk_dual_display_build_dual_plan_from_state' 'sim/dual_display_sim.c'
-require_match 'display/core/dual_display_plan.c' 'sim/Makefile'
-require_match 'display/render/theme/dual_display_theme.c' 'sim/Makefile'
+require_match 'build-base' 'sim/web/Dockerfile'
+require_no_match 'dual_display_sim|ASCII|terminal preview' 'sim/README.md'
+require_no_match 'sim-build|sim-clean' 'Makefile'
 require_match 'struct zmk_dual_display_theme_context' 'display/render/theme/dual_display_theme.h'
 require_match 'ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_PEAK' 'display/render/theme/dual_display_theme.h'
 require_match 'wants_next_frame' 'display/render/lvgl/screen_renderer.h'

@@ -3,7 +3,7 @@
 
 FROM alpine:latest
 
-RUN apk add --no-cache build-base make python3
+RUN apk add --no-cache build-base python3
 
 WORKDIR /workspace
 

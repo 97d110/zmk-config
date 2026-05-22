@@ -165,13 +165,13 @@ static void render_battery_icon(lv_obj_t *screen,
         add_rect(screen, &fill, true);
     }
 
-    const struct zmk_dual_display_rect terminal = {
+    const struct zmk_dual_display_rect battery_contact = {
         .x = slot->bounds.x + slot->bounds.width - 1,
         .y = slot->bounds.y + 2,
         .width = 1,
         .height = slot->bounds.height - 4,
     };
-    add_rect(screen, &terminal, true);
+    add_rect(screen, &battery_contact, true);
 
     if (battery_is_charging(slot->value)) {
         const struct zmk_dual_display_rect charge_mark = {

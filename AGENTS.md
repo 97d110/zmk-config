@@ -28,7 +28,7 @@ This repository is the primary ZMK config and board-module home for the Eyelash 
 ## Default Validation
 
 - Run `make verify` after each change.
-- Firmware build validation is handled by GitHub Actions from commits; do not run local `west` builds unless the user explicitly asks for one.
+- Firmware build validation is handled by GitHub Actions from commits. Never plan, suggest, or attempt local `west update` or `west build` firmware builds in this repo.
 - For runtime debugging, flash one of the dedicated `*_debug` artifacts and inspect its USB serial logs directly.
 
 ## Change Checklist

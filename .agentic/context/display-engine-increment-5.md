@@ -1,8 +1,9 @@
 # Display Engine Increment 5 Handoff
 
 Increment 5 wires the local dual-display state model to real ZMK firmware
-state and events. The simulator remains the manual preview tool, while firmware
-now initializes from and reacts to runtime sources.
+state and events. The browser simulator now treats those firmware logs as the
+primary controller, while firmware initializes from and reacts to runtime
+sources.
 
 ## Implemented
 
@@ -42,11 +43,10 @@ now initializes from and reacts to runtime sources.
 
 ## Validation
 
-- Run `make sim-build` to confirm the host simulator still builds against the
-  durable core planner.
+- Run `make sim` or `make sim-web` to inspect the browser canvas simulator.
 - Run `make verify` after this increment; the verifier now checks that the
   firmware adapter, subscriptions, refresh entry point, and handoff note are
   present.
 
 Firmware build validation is still handled by GitHub Actions from commits.
-Do not run local `west build` unless explicitly requested.
+Never plan, suggest, or attempt local `west update` or `west build`.

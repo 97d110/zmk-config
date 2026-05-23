@@ -57,6 +57,8 @@ For the local dual nice!view display engine:
 - durable LVGL renderer contracts and viewport mapping belong under
   `display/render/lvgl/`,
 - durable display assets belong under `display/assets/`,
+- durable renderer-neutral asset composition planning belongs under
+  `display/render/recipe/`,
 - temporary placeholder rendering and throwaway geometry belong under
   `display/mock/`.
 - all durable and temporary display layout code must preserve the physical

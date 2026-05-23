@@ -23,17 +23,20 @@ required_files=(
   ".agentic/context/display-engine-increment-5B.md"
   ".agentic/context/display-engine-increment-6.md"
   ".agentic/context/display-engine-increment-7.md"
+  ".agentic/context/display-engine-increment-8A.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
   "Kconfig"
   "docs/display-firmware-animation-flow.md"
+  "docs/display-render-recipe-spec.md"
   "config/west.yml"
   "config/eyelash_sofle.conf"
   "config/eyelash_sofle.keymap"
   "config/eyelash_sofle.json"
   "display/README.md"
   "display/assets/README.md"
+  "display/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md"
   "display/core/dual_display_plan.c"
   "display/core/dual_display_plan.h"
   "display/core/dual_display_state.c"
@@ -213,6 +216,11 @@ require_match 'core logical display state' '.agentic/context/display-engine-incr
 require_match 'theme animation state' '.agentic/context/display-engine-increment-5B.md'
 require_match 'Display Engine Increment 6 Handoff' '.agentic/context/display-engine-increment-6.md'
 require_match 'display/render/theme/' '.agentic/context/display-engine-increment-6.md'
+require_match 'Display Engine Increment 8A Handoff' '.agentic/context/display-engine-increment-8A.md'
+require_match 'display/render/recipe/' '.agentic/context/display-engine-increment-8A.md'
+require_match 'output_frames/' 'display/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md'
+require_match 'Display Render Recipe Spec' 'docs/display-render-recipe-spec.md'
+require_match 'display/render/recipe/' 'docs/display-render-recipe-spec.md'
 require_match 'display/firmware/' 'display/README.md'
 require_match 'browser canvas app' 'sim/README.md'
 require_match 'local Python serial bridge' 'sim/README.md'

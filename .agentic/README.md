@@ -8,6 +8,7 @@ This directory keeps the minimum operational context needed to work efficiently 
 - `context/display-engine-increment-5.md`: firmware state adapter handoff for ZMK event-driven display refreshes.
 - `context/display-engine-increment-6.md`: shared theme context, visible mock theme state, and theme-driven refresh handoff.
 - `context/display-engine-increment-7.md`: timing profile, simulator tuning editor, generated C timing constants, and terminology alignment.
+- `context/display-engine-increment-8A.md`: v13 asset analysis and shared render-recipe boundary/spec handoff.
 - `commands.md`: canonical local commands for verification, flashing, and debug logging.
 - `checklists/change.md`: default handoff checklist.
 - `tasks/TEMPLATE.md`: short task template for future work items.

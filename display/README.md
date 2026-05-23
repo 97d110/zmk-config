@@ -13,6 +13,9 @@ without rewriting the core.
   mapping.
 - `display/render/theme/` owns LVGL-free theme interpretation and renderer-
   local animation state that can be shared by firmware and simulator builds.
+- `display/render/recipe/` is the planned LVGL-free shared composition layer.
+  It should consume Theme State snapshots and animation bounds, then emit
+  ordered renderer-neutral commands for firmware and simulator renderers.
 - `display/firmware/` owns ZMK event/state adapters that translate firmware
   runtime sources into the durable `display/core/` state model.
 - `display/assets/` is reserved for durable asset registries and final or
@@ -28,6 +31,9 @@ without rewriting the core.
   inputs.
 - Theme State / Animation State belongs under `display/render/theme/`. It may
   react to Display Plans, but it must not mutate Core State.
+- Render Recipe belongs under the planned `display/render/recipe/` boundary. It
+  may reference stable asset IDs and composition commands, but not LVGL objects,
+  browser objects, package-relative file paths, or Core State fields.
 - Timing Profile values live in `display/render/theme/timing_profile.json` and
   are generated into C-readable build output.
 

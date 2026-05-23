@@ -1,5 +1,5 @@
 {
-  "frame_ms": 250,
+  "frame_ms": 100,
   "animation_loop_ms": 1000,
   "typing_light_ms": 0,
   "typing_medium_ms": 5000,

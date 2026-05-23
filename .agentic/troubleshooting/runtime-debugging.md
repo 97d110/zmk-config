@@ -61,16 +61,8 @@ sequence per half after reboot:
 creating dual display status screen: mock_renderer=1 nice_view_widget_status=0
 dual display default state: side=<left|right> role=<1|2> battery=0 activity=0 transport=0 split=0 layer=1
 display state initialized: side=<0|1> role=<1|2> battery=0 activity=0 transport=0 split=0 layer=1
-dual display plan built: side=<left|right> status_slots=3 animation=68x146+0+14
 created <left|right> dual display status screen
 ```
-
-The initial unknown-value warnings are expected until live ZMK state adapters
-are wired:
-
-- `using unknown battery status value for bucket=0`
-- `using unknown split-link status value for state=0`
-- `using unknown transport status value for state=0` on the left central
 
 `<wrn> ls0xx: Unsupported` immediately after
 `created ... dual display status screen` comes from ZMK calling

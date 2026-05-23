@@ -24,11 +24,15 @@ void zmk_dual_display_lvgl_configure_screen(lv_obj_t *screen) {
         return;
     }
 
-    ZMK_DUAL_DISPLAY_LOG_INF("configuring LVGL screen for panel=%ux%u portrait_plan=%ux%u",
-                             (unsigned int)ZMK_DUAL_DISPLAY_LONG_EDGE,
-                             (unsigned int)ZMK_DUAL_DISPLAY_SHORT_EDGE,
-                             (unsigned int)ZMK_DUAL_DISPLAY_WIDTH,
-                             (unsigned int)ZMK_DUAL_DISPLAY_HEIGHT);
+    static bool logged_geometry;
+    if (!logged_geometry) {
+        logged_geometry = true;
+        ZMK_DUAL_DISPLAY_LOG_INF("configuring LVGL screen for panel=%ux%u portrait_plan=%ux%u",
+                                 (unsigned int)ZMK_DUAL_DISPLAY_LONG_EDGE,
+                                 (unsigned int)ZMK_DUAL_DISPLAY_SHORT_EDGE,
+                                 (unsigned int)ZMK_DUAL_DISPLAY_WIDTH,
+                                 (unsigned int)ZMK_DUAL_DISPLAY_HEIGHT);
+    }
     zmk_dual_display_lvgl_reset_obj(screen);
     lv_obj_set_size(screen, ZMK_DUAL_DISPLAY_LONG_EDGE, ZMK_DUAL_DISPLAY_SHORT_EDGE);
     lv_obj_set_style_bg_color(screen, lv_color_white(), LV_PART_MAIN);
@@ -59,12 +63,6 @@ struct zmk_dual_display_rect zmk_dual_display_lvgl_map_rect(
         .width = bounds->height,
         .height = bounds->width,
     };
-
-    ZMK_DUAL_DISPLAY_LOG_DBG("mapped portrait rect %u,%u %ux%u to panel rect %u,%u %ux%u",
-                             (unsigned int)bounds->x, (unsigned int)bounds->y,
-                             (unsigned int)bounds->width, (unsigned int)bounds->height,
-                             (unsigned int)mapped.x, (unsigned int)mapped.y,
-                             (unsigned int)mapped.width, (unsigned int)mapped.height);
 
     return mapped;
 }

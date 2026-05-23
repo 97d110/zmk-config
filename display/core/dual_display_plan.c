@@ -48,7 +48,6 @@ battery_status_value(enum zmk_dual_display_battery_bucket battery) {
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_BATTERY_51_100_CHARGING;
     case ZMK_DUAL_DISPLAY_BATTERY_UNKNOWN:
     default:
-        ZMK_DUAL_DISPLAY_LOG_WRN("using unknown battery status value for bucket=%d", battery);
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_UNKNOWN;
     }
 }
@@ -62,8 +61,6 @@ split_status_value(enum zmk_dual_display_split_link_state split_link) {
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_SPLIT_DISCONNECTED;
     case ZMK_DUAL_DISPLAY_SPLIT_LINK_UNKNOWN:
     default:
-        ZMK_DUAL_DISPLAY_LOG_WRN("using unknown split-link status value for state=%d",
-                                 split_link);
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_UNKNOWN;
     }
 }
@@ -79,8 +76,6 @@ transport_status_value(enum zmk_dual_display_transport_state transport) {
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_TRANSPORT_DISCONNECTED;
     case ZMK_DUAL_DISPLAY_TRANSPORT_UNKNOWN:
     default:
-        ZMK_DUAL_DISPLAY_LOG_WRN("using unknown transport status value for state=%d",
-                                 transport);
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_UNKNOWN;
     }
 }
@@ -98,7 +93,6 @@ layer_status_value(enum zmk_dual_display_layer_mode layer) {
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_LAYER_CONFIG;
     case ZMK_DUAL_DISPLAY_LAYER_UNKNOWN:
     default:
-        ZMK_DUAL_DISPLAY_LOG_WRN("using unknown layer status value for mode=%d", layer);
         return ZMK_DUAL_DISPLAY_STATUS_VALUE_UNKNOWN;
     }
 }
@@ -135,9 +129,6 @@ static void build_status_bar_plan(const struct zmk_dual_display_state *state,
                        ZMK_DUAL_DISPLAY_STATUS_SLOT_HEIGHT),
     };
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("planned %s portrait status bar on short top edge: %u slots",
-                             zmk_dual_display_side_name(state->side),
-                             (unsigned int)out_plan->slot_count);
 }
 
 static bool side_in_range(enum zmk_dual_display_side side) {
@@ -232,7 +223,6 @@ energy_from_battery(enum zmk_dual_display_battery_bucket battery) {
         return ZMK_DUAL_DISPLAY_ENERGY_HIGH;
     case ZMK_DUAL_DISPLAY_BATTERY_UNKNOWN:
     default:
-        ZMK_DUAL_DISPLAY_LOG_DBG("energy=UNKNOWN (battery=UNKNOWN)");
         return ZMK_DUAL_DISPLAY_ENERGY_UNKNOWN;
     }
 }
@@ -251,14 +241,10 @@ static bool charging_from_battery(enum zmk_dual_display_battery_bucket battery) 
 static enum zmk_dual_display_scene_kind
 select_scene_kind(const struct zmk_dual_display_state *state) {
     if (state->activity == ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("sleep override: scene=SLEEP side=%s",
-                                 zmk_dual_display_side_name(state->side));
         return ZMK_DUAL_DISPLAY_SCENE_SLEEP;
     }
 
     if (state->split_link == ZMK_DUAL_DISPLAY_SPLIT_LINK_DISCONNECTED) {
-        ZMK_DUAL_DISPLAY_LOG_DBG("link-error override: scene=LINK_ERROR side=%s",
-                                 zmk_dual_display_side_name(state->side));
         return ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR;
     }
 
@@ -267,8 +253,6 @@ select_scene_kind(const struct zmk_dual_display_state *state) {
         return ZMK_DUAL_DISPLAY_SCENE_FALLBACK;
     }
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("scene selection: scene=NORMAL activity=%d layer=%d",
-                             state->activity, state->layer);
     return ZMK_DUAL_DISPLAY_SCENE_NORMAL;
 }
 
@@ -292,13 +276,6 @@ static void build_animation_plan(const struct zmk_dual_display_state *state,
         out_plan->charging = charging_from_battery(state->battery);
     }
 
-    ZMK_DUAL_DISPLAY_LOG_DBG(
-        "planned %s animation: variant=%d scene=%d activity=%d layer=%d energy=%d charging=%d "
-        "bounds=%ux%u+%u+%u",
-        zmk_dual_display_side_name(state->side), out_plan->variant, out_plan->scene,
-        out_plan->activity, out_plan->layer, out_plan->energy, (int)out_plan->charging,
-        (unsigned int)out_plan->bounds.width, (unsigned int)out_plan->bounds.height,
-        (unsigned int)out_plan->bounds.x, (unsigned int)out_plan->bounds.y);
 }
 
 void zmk_dual_display_build_screen_plan_from_state(
@@ -323,7 +300,6 @@ void zmk_dual_display_build_screen_plan_from_state(
     build_status_bar_plan(&normalized_state, &out_plan->status_bar);
     build_animation_plan(&normalized_state, &out_plan->animation);
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("built %s screen plan", zmk_dual_display_side_name(side));
 }
 
 void zmk_dual_display_build_screen_plan(enum zmk_dual_display_side side,
@@ -360,7 +336,6 @@ void zmk_dual_display_build_dual_plan_from_state(
     zmk_dual_display_build_screen_plan_from_state(left_state, &out_plan->left);
     zmk_dual_display_build_screen_plan_from_state(right_state, &out_plan->right);
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("built state-aware dual screen plan");
 }
 
 void zmk_dual_display_build_dual_plan(struct zmk_dual_display_dual_plan *out_plan) {
@@ -371,5 +346,4 @@ void zmk_dual_display_build_dual_plan(struct zmk_dual_display_dual_plan *out_pla
 
     zmk_dual_display_build_dual_plan_from_state(NULL, NULL, out_plan);
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("built dual screen plan");
 }

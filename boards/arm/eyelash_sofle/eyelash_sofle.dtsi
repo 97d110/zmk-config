@@ -43,6 +43,14 @@
         sensors = <&left_encoder>;
     };
 
+    behaviors {
+        ddl_sync: dual_display_layer_sync {
+            compatible = "zmk,behavior-dual-display-layer-sync";
+            #binding-cells = <1>;
+            label = "DDL_SYNC";
+        };
+    };
+
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
         wakeup-source;

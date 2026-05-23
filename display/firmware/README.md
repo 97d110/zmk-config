@@ -20,4 +20,6 @@ latest stored firmware state only while the renderer reports active theme
 frames, such as typing phase or short idle decay.
 
 Central-only APIs such as keymap and endpoint state must stay behind central
-role guards so the right-side peripheral firmware can still build.
+role guards so the right-side peripheral firmware can still build. Layer state
+is mirrored to the peripheral display through the local `DDL_SYNC` split
+behavior instead of asking the right half to link central-only keymap APIs.

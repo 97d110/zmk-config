@@ -74,7 +74,6 @@ static void add_slash_overlay(lv_obj_t *screen, const struct zmk_dual_display_re
         add_rect(screen, &slash, true);
     }
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendered slash overlay for unknown status value");
 }
 
 static void add_glyph_pixel(lv_obj_t *screen, uint8_t x, uint8_t y) {
@@ -294,18 +293,10 @@ static void render_status_slot(lv_obj_t *screen,
         break;
     }
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendered status slot kind=%d value=%d at %u,%u %ux%u",
-                             slot->kind, slot->value, (unsigned int)slot->bounds.x,
-                             (unsigned int)slot->bounds.y, (unsigned int)slot->bounds.width,
-                             (unsigned int)slot->bounds.height);
 }
 
 static void render_status_bar(lv_obj_t *screen,
                               const struct zmk_dual_display_status_bar_plan *plan) {
-    ZMK_DUAL_DISPLAY_LOG_INF("mock rendering status bar bounds=%u,%u %ux%u slots=%u",
-                             (unsigned int)plan->bounds.x, (unsigned int)plan->bounds.y,
-                             (unsigned int)plan->bounds.width, (unsigned int)plan->bounds.height,
-                             (unsigned int)plan->slot_count);
     add_rect(screen, &plan->bounds, false);
 
     for (uint8_t i = 0; i < plan->slot_count && i < ZMK_DUAL_DISPLAY_STATUS_SLOT_COUNT; i++) {
@@ -320,11 +311,6 @@ static void render_status_bar(lv_obj_t *screen,
     };
     add_rect(screen, &divider, true);
 
-    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendered status bar at %u,%u %ux%u with %u slots",
-                             (unsigned int)plan->bounds.x, (unsigned int)plan->bounds.y,
-                             (unsigned int)plan->bounds.width,
-                             (unsigned int)plan->bounds.height,
-                             (unsigned int)plan->slot_count);
 }
 
 static uint8_t energy_intensity(enum zmk_dual_display_energy_level energy) {
@@ -679,9 +665,6 @@ struct zmk_dual_display_render_result zmk_dual_display_lvgl_render_screen_plan(
                                  (void *)screen, (const void *)plan);
         return (struct zmk_dual_display_render_result){0};
     }
-
-    ZMK_DUAL_DISPLAY_LOG_DBG("mock rendering %s placeholder screen plan",
-                             zmk_dual_display_side_name(plan->side));
 
     lv_obj_t *canvas = create_canvas(screen);
     if (canvas == NULL) {

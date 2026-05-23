@@ -37,7 +37,7 @@ config ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS
 
 config ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS
     int "Theme animation refresh period in milliseconds"
-    default 250
+    default 100
     range 50 5000
     help
       Sets the display-only refresh cadence used while the renderer-local theme

@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
 
@@ -28,6 +30,7 @@
 
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 #include <zmk/endpoints.h>
+#include <zmk/behavior.h>
 #include <zmk/events/endpoint_changed.h>
 #include <zmk/events/keycode_state_changed.h>
 #include <zmk/events/layer_state_changed.h>
@@ -43,6 +46,7 @@
 #include <zmk/events/split_peripheral_status_changed.h>
 
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#include <zmk/split/central.h>
 #include <zmk/split/transport/central.h>
 #else
 #include <zmk/split/bluetooth/peripheral.h>
@@ -56,6 +60,7 @@ static bool typing_period_had_keypress;
 static bool theme_refresh_loop_active;
 
 static void firmware_render_work_cb(struct k_work *work);
+static int render_latest_firmware_state(const char *reason);
 static void theme_refresh_work_cb(struct k_work *work);
 static void typing_activity_work_cb(struct k_work *work);
 
@@ -66,6 +71,7 @@ K_WORK_DELAYABLE_DEFINE(typing_activity_work, typing_activity_work_cb);
 
 #define TYPING_CHECK_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS)
 #define THEME_REFRESH_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS)
+#define LAYER_SYNC_BEHAVIOR "DDL_SYNC"
 
 static bool states_equal(const struct zmk_dual_display_state *left,
                          const struct zmk_dual_display_state *right) {
@@ -149,6 +155,31 @@ static bool record_typing_keypress_locked(void) {
 
     return false;
 }
+
+#if IS_ENABLED(CONFIG_ZMK_SPLIT) && IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+static void sync_layer_to_split_peripherals(uint8_t layer_index) {
+    struct zmk_behavior_binding binding = {
+        .behavior_dev = LAYER_SYNC_BEHAVIOR,
+        .param1 = layer_index,
+        .param2 = 0,
+    };
+    struct zmk_behavior_binding_event event = {
+        .position = 0,
+        .timestamp = k_uptime_get(),
+        .source = 0,
+    };
+
+    for (int source = 0; source < ZMK_SPLIT_CENTRAL_PERIPHERAL_COUNT; source++) {
+        const int err =
+            zmk_split_central_invoke_behavior((uint8_t)source, &binding, event, true);
+        if (err < 0 && err != -ENOTSUP) {
+            ZMK_DUAL_DISPLAY_LOG_DBG(
+                "split display layer sync skipped: source=%u layer=%u err=%d",
+                (unsigned int)source, (unsigned int)layer_index, err);
+        }
+    }
+}
+#endif
 #endif
 
 static void reset_typing_activity_locked(void) {
@@ -324,6 +355,42 @@ static void overlay_current_zmk_state(struct zmk_dual_display_state *state) {
 #endif
 }
 
+int zmk_dual_display_firmware_apply_layer_index(uint8_t layer_index, const char *reason) {
+    struct zmk_dual_display_state previous;
+    struct zmk_dual_display_state next;
+
+    k_mutex_lock(&firmware_state_mutex, K_FOREVER);
+    if (!firmware_state_ready) {
+        k_mutex_unlock(&firmware_state_mutex);
+        ZMK_DUAL_DISPLAY_LOG_DBG("ignored display layer sync before status screen init");
+        return -ENODEV;
+    }
+
+    previous = firmware_state;
+    next = firmware_state;
+    next.split_link = current_split_link_state();
+    next.layer = zmk_dual_display_layer_mode_from_index(layer_index);
+
+    const bool changed = !states_equal(&previous, &next);
+    if (changed) {
+        firmware_state = next;
+    }
+    k_mutex_unlock(&firmware_state_mutex);
+
+    if (!changed) {
+        ZMK_DUAL_DISPLAY_LOG_DBG("display layer sync produced no visual state change");
+        return 0;
+    }
+
+    zmk_dual_display_log_state_transition(&previous, &next);
+    if (!zmk_display_is_initialized()) {
+        ZMK_DUAL_DISPLAY_LOG_DBG("display layer sync updated state before display init");
+        return 0;
+    }
+
+    return render_latest_firmware_state(reason == NULL ? "layer-sync" : reason);
+}
+
 void zmk_dual_display_firmware_init_state(enum zmk_dual_display_side side,
                                           struct zmk_dual_display_state *out_state) {
     if (out_state == NULL) {
@@ -345,7 +412,7 @@ void zmk_dual_display_firmware_init_state(enum zmk_dual_display_side side,
 
 static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_state *state,
                                  bool *start_typing_cycle, bool *cancel_typing_cycle,
-                                 bool *quiet_no_change_log) {
+                                 bool *quiet_no_change_log, uint8_t *split_sync_layer_index) {
     if (eh == NULL || state == NULL) {
         ZMK_DUAL_DISPLAY_LOG_WRN("ignored display state event update with missing input");
         return false;
@@ -395,8 +462,12 @@ static bool apply_event_to_state(const zmk_event_t *eh, struct zmk_dual_display_
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     const struct zmk_layer_state_changed *layer = as_zmk_layer_state_changed(eh);
     if (layer != NULL) {
+        const uint8_t active_layer = zmk_keymap_highest_layer_active();
         state->split_link = current_split_link_state();
-        state->layer = current_layer_mode();
+        state->layer = zmk_dual_display_layer_mode_from_index(active_layer);
+        if (split_sync_layer_index != NULL) {
+            *split_sync_layer_index = active_layer;
+        }
         ZMK_DUAL_DISPLAY_LOG_DBG(
             "applied layer event to display state: layer=%u active=%d",
             (unsigned int)layer->layer, layer->state);
@@ -594,6 +665,7 @@ static int firmware_state_listener_cb(const zmk_event_t *eh) {
     bool start_typing_cycle = false;
     bool cancel_typing_cycle = false;
     bool quiet_no_change_log = false;
+    uint8_t split_sync_layer_index = UINT8_MAX;
 
     k_mutex_lock(&firmware_state_mutex, K_FOREVER);
     if (!firmware_state_ready) {
@@ -606,7 +678,7 @@ static int firmware_state_listener_cb(const zmk_event_t *eh) {
     previous = firmware_state;
     next = firmware_state;
     const bool handled = apply_event_to_state(eh, &next, &start_typing_cycle, &cancel_typing_cycle,
-                                              &quiet_no_change_log);
+                                              &quiet_no_change_log, &split_sync_layer_index);
     const bool changed = handled && !states_equal(&previous, &next);
     if (changed) {
         firmware_state = next;
@@ -616,6 +688,12 @@ static int firmware_state_listener_cb(const zmk_event_t *eh) {
     if (!handled) {
         return ZMK_EV_EVENT_BUBBLE;
     }
+
+#if IS_ENABLED(CONFIG_ZMK_SPLIT) && IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+    if (split_sync_layer_index != UINT8_MAX) {
+        sync_layer_to_split_peripherals(split_sync_layer_index);
+    }
+#endif
 
     if (cancel_typing_cycle) {
         k_work_cancel_delayable(&typing_activity_work);

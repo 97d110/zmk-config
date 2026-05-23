@@ -43,17 +43,12 @@ static int render_state_to_screen(lv_obj_t *screen, const struct zmk_dual_displa
 
     struct zmk_dual_display_screen_plan plan;
     zmk_dual_display_build_screen_plan_from_state(state, &plan);
-    LOG_DBG("dual display plan built: side=%s status_slots=%u animation=%ux%u+%u+%u",
-            zmk_dual_display_side_name(plan.side), (unsigned int)plan.status_bar.slot_count,
-            (unsigned int)plan.animation.bounds.width, (unsigned int)plan.animation.bounds.height,
-            (unsigned int)plan.animation.bounds.x, (unsigned int)plan.animation.bounds.y);
 
     if (refresh) {
         lv_obj_clean(screen);
         zmk_dual_display_lvgl_configure_screen(screen);
     }
 
-    LOG_DBG("rendering %s dual display screen plan", zmk_dual_display_side_name(plan.side));
     last_render_result = zmk_dual_display_lvgl_render_screen_plan(screen, &plan);
 
     return 0;
@@ -66,7 +61,6 @@ int zmk_dual_display_status_screen_update_from_state(
         return -ENODEV;
     }
 
-    LOG_DBG("refreshing dual display status screen from firmware state");
     return render_state_to_screen(status_screen, state, true);
 }
 

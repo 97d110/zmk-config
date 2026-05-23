@@ -41,7 +41,10 @@ compare old and new state, and only queue a render when a visual field changed.
 
 Central-only ZMK APIs, such as keymap and endpoint state, remain behind central
 role guards so right-side peripheral firmware does not link central-only
-objects.
+objects. Layer changes are mirrored to the right-side display through a local
+split behavior named `DDL_SYNC`; the central sends the current layer index, and
+the peripheral applies it to its display state without reading keymap state
+locally.
 
 ### Core State And Display Plan
 
@@ -189,7 +192,7 @@ endpoint can remain the same while the active profile connection changes.
 
 ### Layers
 
-Layer events are central-side only. The adapter reads
+Layer events originate on the central side. The adapter reads
 `zmk_keymap_highest_layer_active()` and maps known layer indexes into generic
 display modes:
 
@@ -200,6 +203,12 @@ display modes:
 
 The display core deliberately stores generic layer modes rather than keymap- or
 art-specific names.
+
+After each central layer event, the adapter invokes the `DDL_SYNC` behavior on
+split peripherals. The right-side firmware handles that behavior by applying
+the received layer index to its own stored display state and redrawing, so the
+secondary display can react to layer changes without linking central-only
+keymap APIs.
 
 ### Split Link
 

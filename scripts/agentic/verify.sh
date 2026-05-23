@@ -40,6 +40,7 @@ required_files=(
   "display/core/dual_display_state.h"
   "display/core/README.md"
   "display/firmware/README.md"
+  "display/firmware/dual_display_layer_sync_behavior.c"
   "display/firmware/dual_display_state_adapter.c"
   "display/firmware/dual_display_state_adapter.h"
   "display/log.h"
@@ -56,6 +57,7 @@ required_files=(
   "display/render/theme/dual_display_theme.c"
   "display/render/theme/dual_display_theme.h"
   "display/render/theme/timing_profile.json"
+  "dts/bindings/behaviors/zmk,behavior-dual-display-layer-sync.yaml"
   "scripts/agentic/generate_theme_timing.py"
   "sim/README.md"
   "sim/engine/dual_display_engine.c"
@@ -150,9 +152,10 @@ require_match 'LV_USE_CANVAS' 'Kconfig'
 require_match 'module-str\s+=\s+zmk_dual_display' 'Kconfig'
 require_no_match 'CONFIG_NICE_VIEW_WIDGET_STATUS=n' 'config/eyelash_sofle.conf'
 require_match 'LOG_MODULE_REGISTER\(zmk_dual_display' 'display/render/lvgl/dual_display_status_screen.c'
-require_match 'ZMK_DUAL_DISPLAY_LOG_DBG' 'display/core/dual_display_plan.c'
+require_match 'ZMK_DUAL_DISPLAY_LOG_WRN' 'display/core/dual_display_plan.c'
 require_match 'display/core/dual_display_state.c' 'CMakeLists.txt'
 require_match 'display/firmware/dual_display_state_adapter.c' 'CMakeLists.txt'
+require_match 'display/firmware/dual_display_layer_sync_behavior.c' 'CMakeLists.txt'
 require_match 'display/render/theme/dual_display_theme.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/render/lvgl/dual_display_status_screen.c'
@@ -174,6 +177,8 @@ require_match 'complete display state' 'display/firmware/dual_display_state_adap
 require_match 'typing-return-idle' 'display/firmware/dual_display_state_adapter.c'
 require_match 'CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
 require_match 'CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
+require_match 'DDL_SYNC' 'boards/arm/eyelash_sofle/eyelash_sofle.dtsi'
+require_match 'zmk_dual_display_firmware_apply_layer_index' 'display/firmware/dual_display_layer_sync_behavior.c'
 require_match 'K_WORK_DELAYABLE_DEFINE\(theme_refresh_work' 'display/firmware/dual_display_state_adapter.c'
 require_match 'zmk_dual_display_status_screen_next_frame_delay' 'display/firmware/dual_display_state_adapter.c'
 require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
@@ -188,14 +193,14 @@ require_match 'display/render/lvgl/viewport.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'lv_canvas_draw_rect' 'display/mock/lvgl/placeholder_renderer.c'
-require_match 'slash overlay' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'add_slash_overlay' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'enum zmk_dual_display_scene_kind' 'display/core/dual_display_plan.h'
 require_match 'ZMK_DUAL_DISPLAY_ENERGY_HIGH' 'display/core/dual_display_plan.h'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_SLEEP' 'display/core/dual_display_plan.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR' 'display/core/dual_display_plan.c'
 require_match 'select_scene_kind' 'display/core/dual_display_plan.c'
-require_match 'sleep override' 'display/core/dual_display_plan.c'
-require_match 'link-error override' 'display/core/dual_display_plan.c'
+require_match 'ZMK_DUAL_DISPLAY_SCENE_SLEEP' 'display/core/dual_display_plan.c'
+require_match 'ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR' 'display/core/dual_display_plan.c'
 require_match 'SCENE_SLEEP' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'make sim' '.agentic/commands.md'
 require_match 'make sim-web-docker' '.agentic/commands.md'
@@ -218,7 +223,7 @@ require_match 'dual display canvas simulator' 'sim/web/app.py'
 require_match 'SerialTailer' 'sim/web/app.py'
 require_match 'EngineProcess' 'sim/web/app.py'
 require_match 'KeyboardEventController' 'sim/web/app.py'
-require_match 'layer_changed' 'sim/web/app.py'
+require_match 'LAYER_STATE_RE' 'sim/web/app.py'
 require_match '_active_layers' 'sim/web/app.py'
 require_match '_source_sides' 'sim/web/app.py'
 require_match '_mark_usb_charging' 'sim/web/app.py'

@@ -44,6 +44,12 @@ ENGINE_INPUTS = [
     TIMING_PROFILE_PATH,
     TIMING_GENERATOR,
 ]
+LAYER_STATE_RE = re.compile(
+    r"\b(?:zmk_)?layer(?:_state)?_changed\b:?.*?"
+    r"\blayer(?:=|\s+)(\d+).*?"
+    r"\bstate(?:=|\s+)(0|1|true|false|on|off)\b",
+    re.IGNORECASE,
+)
 
 
 def load_timing_tools():
@@ -231,12 +237,12 @@ class KeyboardEventController:
         self._engine.command(f"battery {side} 100 1")
 
     def _apply_layer_state_change(self, line: str) -> bool:
-        match = re.search(r"layer_changed:\s+layer\s+(\d+)\s+state\s+([01])", line)
+        match = LAYER_STATE_RE.search(line)
         if match is None:
             return False
 
         layer = int(match.group(1))
-        active = match.group(2) == "1"
+        active = match.group(2).lower() in ("1", "true", "on")
         if active:
             self._active_layers.add(layer)
         else:
@@ -591,6 +597,7 @@ PAGE = r"""<!doctype html>
     const SLOT_TOP = 3;
     const EDGE = 4;
     const RENDER_FPS = 12;
+    const SERIAL_POLL_MS = 100;
 
     const defaults = {
       left: { side: "left", role: "central", battery: "51_100_charging", activity: "idle", transport: "usb", split: "unknown", layer: "type" },
@@ -931,7 +938,7 @@ PAGE = r"""<!doctype html>
         document.getElementById("bridgeStatus").innerHTML =
           `<span class="bad">local serial: ${err.message}</span>`;
       } finally {
-        setTimeout(pollLocalSerial, 250);
+        setTimeout(pollLocalSerial, SERIAL_POLL_MS);
       }
     }
 

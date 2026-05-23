@@ -18,6 +18,19 @@ without rewriting the core.
 - `display/assets/` is reserved for durable asset registries and final or
   long-lived placeholder assets after the generic engine is proven.
 
+## State Terms
+
+- Core State is the theme-independent `zmk_dual_display_state`: side, role,
+  battery/charging bucket, `idle|typing|sleep`, transport, split-link, and
+  layer.
+- Display Plan is the LVGL-free render input derived from Core State. It
+  translates status-bar slots and carries theme-independent animation-section
+  inputs.
+- Theme State / Animation State belongs under `display/render/theme/`. It may
+  react to Display Plans, but it must not mutate Core State.
+- Timing Profile values live in `display/render/theme/timing_profile.json` and
+  are generated into C-readable build output.
+
 ## Temporary Code
 
 - `display/mock/` owns proof-of-concept drawing, mock icons, hard-coded

@@ -6,12 +6,14 @@
 from __future__ import annotations
 
 import glob
+import importlib.util
 import json
 import os
 import re
 import select
 import shutil
 import subprocess
+import sys
 import termios
 import threading
 import time
@@ -21,16 +23,40 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 
+sys.dont_write_bytecode = True
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
 PORT = int(os.environ.get("PORT", "8080"))
 SERIAL_GLOBS = ("/dev/serial/by-id/*", "/dev/ttyACM*")
 ENGINE_BIN = ROOT_DIR / "sim" / "build" / "dual_display_engine"
-ENGINE_SOURCES = [
+GENERATED_INCLUDE_DIR = ROOT_DIR / "sim" / "build" / "generated"
+TIMING_PROFILE_PATH = ROOT_DIR / "display" / "render" / "theme" / "timing_profile.json"
+TIMING_HEADER = GENERATED_INCLUDE_DIR / "display" / "render" / "theme" / "dual_display_theme_timing.h"
+TIMING_GENERATOR = ROOT_DIR / "scripts" / "agentic" / "generate_theme_timing.py"
+C_ENGINE_SOURCES = [
     ROOT_DIR / "sim" / "engine" / "dual_display_engine.c",
     ROOT_DIR / "display" / "core" / "dual_display_state.c",
     ROOT_DIR / "display" / "core" / "dual_display_plan.c",
     ROOT_DIR / "display" / "render" / "theme" / "dual_display_theme.c",
 ]
+ENGINE_INPUTS = [
+    *C_ENGINE_SOURCES,
+    TIMING_PROFILE_PATH,
+    TIMING_GENERATOR,
+]
+
+
+def load_timing_tools():
+    spec = importlib.util.spec_from_file_location("generate_theme_timing", TIMING_GENERATOR)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load theme timing generator")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+TIMING_TOOLS = load_timing_tools()
 
 
 class EngineProcess:
@@ -39,6 +65,7 @@ class EngineProcess:
         self._process: subprocess.Popen[str] | None = None
         self._last_snapshot: dict[str, object] = {}
         self._last_tick_at = time.monotonic()
+        self._timing_profile = TIMING_TOOLS.load_profile(TIMING_PROFILE_PATH)
 
     def start(self) -> None:
         self._build()
@@ -71,12 +98,29 @@ class EngineProcess:
             self._last_snapshot = self._read_snapshot()
             return dict(self._last_snapshot)
 
+    def timing_profile(self) -> dict[str, int]:
+        with self._lock:
+            return dict(self._timing_profile)
+
+    def update_timing_profile(self, raw_profile: object) -> dict[str, int]:
+        profile = TIMING_TOOLS.validate_profile(raw_profile)
+        command = "profile " + TIMING_TOOLS.format_profile_assignments(profile)
+        with self._lock:
+            self._timing_profile = dict(profile)
+            if self._process is not None and self._process.stdin is not None:
+                self._process.stdin.write(command + "\n")
+                self._process.stdin.flush()
+                self._last_snapshot = self._read_snapshot()
+            return dict(self._timing_profile)
+
     def _build(self) -> None:
         if shutil.which("cc") is None:
             raise RuntimeError("cc compiler is required for the host display engine")
+        TIMING_TOOLS.write_header(self._timing_profile, TIMING_PROFILE_PATH, TIMING_HEADER)
         ENGINE_BIN.parent.mkdir(parents=True, exist_ok=True)
-        newest_source = max(path.stat().st_mtime for path in ENGINE_SOURCES)
-        if ENGINE_BIN.exists() and ENGINE_BIN.stat().st_mtime >= newest_source:
+        newest_source = max(path.stat().st_mtime for path in ENGINE_INPUTS)
+        if (ENGINE_BIN.exists() and ENGINE_BIN.stat().st_mtime >= newest_source and
+                TIMING_HEADER.exists() and TIMING_HEADER.stat().st_mtime >= newest_source):
             return
         subprocess.run(
             [
@@ -86,7 +130,9 @@ class EngineProcess:
                 "-Wextra",
                 "-I",
                 str(ROOT_DIR),
-                *[str(path) for path in ENGINE_SOURCES],
+                "-I",
+                str(GENERATED_INCLUDE_DIR),
+                *[str(path) for path in C_ENGINE_SOURCES],
                 "-o",
                 str(ENGINE_BIN),
             ],
@@ -405,7 +451,7 @@ PAGE = r"""<!doctype html>
     }
     .workspace {
       display: grid;
-      grid-template-rows: auto minmax(420px, 1fr) minmax(180px, 30vh);
+      grid-template-rows: auto minmax(420px, 1fr) auto minmax(180px, 30vh);
       gap: 14px;
       min-height: calc(100vh - 32px);
     }
@@ -453,6 +499,40 @@ PAGE = r"""<!doctype html>
       background: #080b0c;
       overflow: hidden;
     }
+    .timing {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 28vw);
+      gap: 12px;
+      padding: 12px;
+      align-items: start;
+    }
+    .timing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font: 11px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    input {
+      height: 30px;
+      padding: 4px 6px;
+    }
+    textarea {
+      min-height: 136px;
+      resize: vertical;
+      padding: 8px;
+    }
     pre {
       margin: 0;
       padding: 12px;
@@ -470,6 +550,7 @@ PAGE = r"""<!doctype html>
       .canvas-wrap { grid-template-columns: 1fr; }
       canvas { width: min(72vw, 272px); height: min(78vh, 640px); }
       .logs { grid-template-columns: 1fr; }
+      .timing { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -490,6 +571,10 @@ PAGE = r"""<!doctype html>
           <div class="display-title" id="rightTitle">right</div>
           <canvas id="rightCanvas" width="68" height="160"></canvas>
         </div>
+      </div>
+      <div class="panel timing">
+        <div class="timing-grid" id="timingGrid"></div>
+        <textarea id="timingExport" spellcheck="false"></textarea>
       </div>
       <div class="panel logs">
         <pre id="stateLog"></pre>
@@ -524,6 +609,20 @@ PAGE = r"""<!doctype html>
       lines: 0,
       snapshots: 0,
     };
+    const timingFields = [
+      "frame_ms",
+      "animation_loop_ms",
+      "typing_light_ms",
+      "typing_medium_ms",
+      "typing_high_ms",
+      "typing_peak_ms",
+      "quiet_before_decay_ms",
+      "decay_to_medium_ms",
+      "decay_to_light_ms",
+      "decay_to_idle_ms",
+      "display_sleep_ms",
+    ];
+    let timingProfile = {};
     let lastFrame = 0;
     let lastKeyboardStateAt = 0;
 
@@ -729,6 +828,63 @@ PAGE = r"""<!doctype html>
         `${side} ${theme[side].phase} tick=${theme[side].frameTick} split=${state[side].split}`;
     }
 
+    function timingFromInputs() {
+      const next = {};
+      for (const field of timingFields) {
+        const input = document.getElementById(`timing-${field}`);
+        next[field] = Number.parseInt(input.value, 10);
+      }
+      return next;
+    }
+
+    function updateTimingExport() {
+      document.getElementById("timingExport").value = JSON.stringify(timingProfile, null, 2);
+    }
+
+    async function submitTimingProfile() {
+      const next = timingFromInputs();
+      const response = await fetch("/api/timing", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "timing update failed");
+      timingProfile = body.profile || next;
+      updateTimingExport();
+    }
+
+    function renderTimingEditor() {
+      const grid = document.getElementById("timingGrid");
+      grid.innerHTML = "";
+      for (const field of timingFields) {
+        const label = document.createElement("label");
+        label.textContent = field;
+        const input = document.createElement("input");
+        input.id = `timing-${field}`;
+        input.type = "number";
+        input.min = "0";
+        input.step = "50";
+        input.value = timingProfile[field] ?? 0;
+        input.addEventListener("change", () => {
+          submitTimingProfile().catch((err) => {
+            document.getElementById("bridgeStatus").innerHTML =
+              `<span class="bad">timing: ${err.message}</span>`;
+          });
+        });
+        label.appendChild(input);
+        grid.appendChild(label);
+      }
+      updateTimingExport();
+    }
+
+    async function loadTimingProfile() {
+      const response = await fetch("/api/timing", { cache: "no-store" });
+      const body = await response.json();
+      timingProfile = body.profile || {};
+      renderTimingEditor();
+    }
+
     function renderLoop(now) {
       const fps = RENDER_FPS;
       if (now - lastFrame >= 1000 / fps) {
@@ -794,6 +950,10 @@ PAGE = r"""<!doctype html>
     }
 
     updateStateLog();
+    loadTimingProfile().catch((err) => {
+      document.getElementById("bridgeStatus").innerHTML =
+        `<span class="bad">timing: ${err.message}</span>`;
+    });
     pollLocalSerial();
     requestAnimationFrame(renderLoop);
   </script>
@@ -805,6 +965,15 @@ PAGE = r"""<!doctype html>
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/timing":
+            body = json.dumps({"profile": ENGINE.timing_profile()}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         if parsed.path == "/api/serial":
             query = parse_qs(parsed.query)
             try:
@@ -828,6 +997,28 @@ class Handler(BaseHTTPRequestHandler):
         body = PAGE.encode("utf-8")
         self.send_response(200)
         self.send_header("content-type", "text/html; charset=utf-8")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path != "/api/timing":
+            self.send_error(404)
+            return
+
+        try:
+            length = int(self.headers.get("content-length", "0"))
+            raw_body = self.rfile.read(length)
+            profile = json.loads(raw_body.decode("utf-8"))
+            updated = ENGINE.update_timing_profile(profile)
+            body = json.dumps({"profile": updated}).encode("utf-8")
+            self.send_response(200)
+        except Exception as exc:
+            body = json.dumps({"error": str(exc)}).encode("utf-8")
+            self.send_response(400)
+
+        self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)

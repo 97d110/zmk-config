@@ -9,8 +9,9 @@
 #include <stdint.h>
 
 #include <display/core/dual_display_plan.h>
+#include <display/render/theme/dual_display_theme_timing.h>
 
-#define ZMK_DUAL_DISPLAY_THEME_DEFAULT_FRAME_MS 250
+#define ZMK_DUAL_DISPLAY_THEME_DEFAULT_FRAME_MS ZMK_DUAL_DISPLAY_THEME_FRAME_MS
 
 enum zmk_dual_display_theme_phase {
     ZMK_DUAL_DISPLAY_THEME_PHASE_IDLE,
@@ -35,24 +36,51 @@ struct zmk_dual_display_theme_snapshot {
     enum zmk_dual_display_theme_phase phase;
     bool charging;
     uint16_t frame_tick;
-    uint8_t typing_ticks;
-    uint8_t decay_ticks;
+    uint32_t typing_elapsed_ms;
+    uint32_t decay_elapsed_ms;
+    uint32_t idle_elapsed_ms;
+    uint32_t loop_elapsed_ms;
     bool wants_next_frame;
     uint32_t next_delay_ms;
 };
 
+struct zmk_dual_display_theme_timing_profile {
+    uint32_t frame_ms;
+    uint32_t animation_loop_ms;
+    uint32_t typing_light_ms;
+    uint32_t typing_medium_ms;
+    uint32_t typing_high_ms;
+    uint32_t typing_peak_ms;
+    uint32_t quiet_before_decay_ms;
+    uint32_t decay_to_medium_ms;
+    uint32_t decay_to_light_ms;
+    uint32_t decay_to_idle_ms;
+    uint32_t display_sleep_ms;
+};
+
 struct zmk_dual_display_theme_context {
     struct zmk_dual_display_theme_snapshot snapshot;
+    struct zmk_dual_display_theme_timing_profile timing;
     bool initialized;
     bool logged_active_loop;
 };
 
+struct zmk_dual_display_theme_timing_profile zmk_dual_display_theme_default_timing_profile(void);
+
 void zmk_dual_display_theme_context_init(struct zmk_dual_display_theme_context *context,
                                          enum zmk_dual_display_side side);
+
+void zmk_dual_display_theme_context_set_timing_profile(
+    struct zmk_dual_display_theme_context *context,
+    const struct zmk_dual_display_theme_timing_profile *profile);
 
 void zmk_dual_display_theme_context_observe_plan(
     struct zmk_dual_display_theme_context *context,
     const struct zmk_dual_display_screen_plan *plan);
+
+void zmk_dual_display_theme_context_observe_plan_elapsed(
+    struct zmk_dual_display_theme_context *context,
+    const struct zmk_dual_display_screen_plan *plan, uint32_t elapsed_ms);
 
 struct zmk_dual_display_theme_snapshot zmk_dual_display_theme_context_snapshot(
     const struct zmk_dual_display_theme_context *context);

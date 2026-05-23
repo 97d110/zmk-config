@@ -482,9 +482,9 @@ static void schedule_theme_refresh_from_last_render(const char *reason) {
         return;
     }
 
-    ARG_UNUSED(delay_ms);
-    const int err = k_work_reschedule_for_queue(zmk_display_work_q(), &theme_refresh_work,
-                                                THEME_REFRESH_PERIOD);
+    const k_timeout_t timeout = delay_ms > 0 ? K_MSEC(delay_ms) : THEME_REFRESH_PERIOD;
+    const int err =
+        k_work_reschedule_for_queue(zmk_display_work_q(), &theme_refresh_work, timeout);
     if (err < 0) {
         ZMK_DUAL_DISPLAY_LOG_WRN("failed to schedule theme refresh: reason=%s err=%d", reason,
                                  err);
@@ -493,8 +493,10 @@ static void schedule_theme_refresh_from_last_render(const char *reason) {
 
     if (!theme_refresh_loop_active) {
         theme_refresh_loop_active = true;
-        ZMK_DUAL_DISPLAY_LOG_DBG("theme refresh loop started: reason=%s period_ms=%d", reason,
-                                 CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS);
+        ZMK_DUAL_DISPLAY_LOG_DBG("theme refresh loop started: reason=%s period_ms=%u", reason,
+                                 (unsigned int)(delay_ms > 0
+                                                    ? delay_ms
+                                                    : CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS));
     }
 }
 

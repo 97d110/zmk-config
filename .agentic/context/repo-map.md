@@ -44,6 +44,10 @@
 - `.agentic/context/display-engine-increment-6.md`
   Handoff note for the shared LVGL-free theme context, visible no-asset mock
   theme renderer, simulator ticks, and firmware theme refresh loop.
+- `.agentic/context/display-engine-increment-7.md`
+  Handoff note for the shared Timing Profile, generated C timing constants,
+  simulator timing editor, scripted timing checks, visual display-sleep, and
+  Core State / Display Plan / Theme State terminology alignment.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
@@ -53,7 +57,9 @@
   mapping. The current renderer contract is implemented by `display/mock/`.
 - `display/render/theme/`
   Durable LVGL-free theme interpretation shared by firmware and simulator
-  builds. Owns renderer-local frame ticks, typing phase, and decay state.
+  builds. Owns renderer-local frame ticks, typing phase, decay state,
+  visual display-sleep, and the JSON Timing Profile generated into C constants
+  during firmware and simulator builds.
 - `display/firmware/`
   Durable ZMK firmware state adapter. It maps runtime battery, activity,
   keypress, endpoint, layer, USB, BLE, and split-link sources into
@@ -67,8 +73,10 @@
   Browser canvas simulator for the dual-display scene engine. It provides
   a local Python serial bridge for real debug firmware logs, a host C runner
   under `sim/engine/` built from `display/core/` and `display/render/theme/`,
-  and a canvas renderer in `sim/web/`. Core keyboard events from hardware are
-  the controller; firmware display/theme logs remain diagnostics only.
+  a timing editor that updates the host engine's Timing Profile, scripted
+  timing checks, and a canvas renderer in `sim/web/`. Core keyboard events from
+  hardware are the controller; firmware display/theme logs remain diagnostics
+  only.
 - `.agentic/troubleshooting/split-pairing.md`
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 - `docs/display-firmware-animation-flow.md`

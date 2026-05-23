@@ -20,6 +20,7 @@ struct host_engine {
     struct zmk_dual_display_state right;
     struct zmk_dual_display_theme_context left_theme;
     struct zmk_dual_display_theme_context right_theme;
+    struct zmk_dual_display_theme_timing_profile timing;
     uint32_t now_ms;
     uint32_t typing_until_ms;
 };
@@ -89,8 +90,11 @@ static void engine_init(struct host_engine *engine) {
     engine->left.battery = ZMK_DUAL_DISPLAY_BATTERY_51_100_CHARGING;
     engine->left.transport = ZMK_DUAL_DISPLAY_TRANSPORT_USB;
     engine->right.battery = ZMK_DUAL_DISPLAY_BATTERY_51_100;
+    engine->timing = zmk_dual_display_theme_default_timing_profile();
     zmk_dual_display_theme_context_init(&engine->left_theme, ZMK_DUAL_DISPLAY_SIDE_LEFT);
     zmk_dual_display_theme_context_init(&engine->right_theme, ZMK_DUAL_DISPLAY_SIDE_RIGHT);
+    zmk_dual_display_theme_context_set_timing_profile(&engine->left_theme, &engine->timing);
+    zmk_dual_display_theme_context_set_timing_profile(&engine->right_theme, &engine->timing);
     engine->now_ms = 0;
     engine->typing_until_ms = 0;
 }
@@ -103,10 +107,13 @@ static void maybe_return_idle(struct host_engine *engine) {
     }
 }
 
-static void observe(struct host_engine *engine, struct zmk_dual_display_dual_plan *plan) {
+static void observe(struct host_engine *engine, struct zmk_dual_display_dual_plan *plan,
+                    uint32_t elapsed_ms) {
     zmk_dual_display_build_dual_plan_from_state(&engine->left, &engine->right, plan);
-    zmk_dual_display_theme_context_observe_plan(&engine->left_theme, &plan->left);
-    zmk_dual_display_theme_context_observe_plan(&engine->right_theme, &plan->right);
+    zmk_dual_display_theme_context_observe_plan_elapsed(&engine->left_theme, &plan->left,
+                                                        elapsed_ms);
+    zmk_dual_display_theme_context_observe_plan_elapsed(&engine->right_theme, &plan->right,
+                                                        elapsed_ms);
 }
 
 static void print_side_json(const char *key, const struct zmk_dual_display_state *state,
@@ -114,8 +121,9 @@ static void print_side_json(const char *key, const struct zmk_dual_display_state
     printf("\"%s\":{\"state\":{\"side\":\"%s\",\"battery\":\"%s\",\"activity\":\"%s\","
            "\"transport\":\"%s\",\"split\":\"%s\",\"layer\":\"%s\"},"
            "\"theme\":{\"variant\":\"%s\",\"scene\":\"%s\",\"phase\":\"%s\","
-           "\"energy\":\"%s\",\"charging\":%s,\"frameTick\":%u,\"typingTicks\":%u,"
-           "\"decayTicks\":%u,\"wantsNextFrame\":%s,\"nextDelayMs\":%u}}",
+           "\"energy\":\"%s\",\"charging\":%s,\"frameTick\":%u,\"typingElapsedMs\":%u,"
+           "\"decayElapsedMs\":%u,\"idleElapsedMs\":%u,\"loopElapsedMs\":%u,"
+           "\"wantsNextFrame\":%s,\"nextDelayMs\":%u}}",
            key, zmk_dual_display_side_name(state->side), battery_name(state->battery),
            activity_name(state->activity), transport_name(state->transport),
            split_name(state->split_link), zmk_dual_display_theme_layer_name(state->layer),
@@ -123,16 +131,17 @@ static void print_side_json(const char *key, const struct zmk_dual_display_state
            zmk_dual_display_theme_scene_name(theme->scene),
            zmk_dual_display_theme_phase_name(theme->phase),
            zmk_dual_display_theme_energy_name(theme->energy), theme->charging ? "true" : "false",
-           (unsigned int)theme->frame_tick, (unsigned int)theme->typing_ticks,
-           (unsigned int)theme->decay_ticks, theme->wants_next_frame ? "true" : "false",
+           (unsigned int)theme->frame_tick, (unsigned int)theme->typing_elapsed_ms,
+           (unsigned int)theme->decay_elapsed_ms, (unsigned int)theme->idle_elapsed_ms,
+           (unsigned int)theme->loop_elapsed_ms, theme->wants_next_frame ? "true" : "false",
            (unsigned int)theme->next_delay_ms);
 }
 
-static void print_snapshot(struct host_engine *engine) {
+static void print_snapshot(struct host_engine *engine, uint32_t elapsed_ms) {
     maybe_return_idle(engine);
 
     struct zmk_dual_display_dual_plan plan;
-    observe(engine, &plan);
+    observe(engine, &plan, elapsed_ms);
 
     const struct zmk_dual_display_theme_snapshot left_theme =
         zmk_dual_display_theme_context_snapshot(&engine->left_theme);
@@ -178,6 +187,57 @@ static void apply_battery(struct host_engine *engine, char *side, char *percent,
         zmk_dual_display_battery_bucket_from_percent((int16_t)atoi(percent), is_charging);
 }
 
+static bool apply_profile_field(struct zmk_dual_display_theme_timing_profile *profile,
+                                const char *field, uint32_t value) {
+    if (strcmp(field, "frame_ms") == 0) {
+        profile->frame_ms = value;
+    } else if (strcmp(field, "animation_loop_ms") == 0) {
+        profile->animation_loop_ms = value;
+    } else if (strcmp(field, "typing_light_ms") == 0) {
+        profile->typing_light_ms = value;
+    } else if (strcmp(field, "typing_medium_ms") == 0) {
+        profile->typing_medium_ms = value;
+    } else if (strcmp(field, "typing_high_ms") == 0) {
+        profile->typing_high_ms = value;
+    } else if (strcmp(field, "typing_peak_ms") == 0) {
+        profile->typing_peak_ms = value;
+    } else if (strcmp(field, "quiet_before_decay_ms") == 0) {
+        profile->quiet_before_decay_ms = value;
+    } else if (strcmp(field, "decay_to_medium_ms") == 0) {
+        profile->decay_to_medium_ms = value;
+    } else if (strcmp(field, "decay_to_light_ms") == 0) {
+        profile->decay_to_light_ms = value;
+    } else if (strcmp(field, "decay_to_idle_ms") == 0) {
+        profile->decay_to_idle_ms = value;
+    } else if (strcmp(field, "display_sleep_ms") == 0) {
+        profile->display_sleep_ms = value;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+static void apply_profile(struct host_engine *engine) {
+    char *assignment = NULL;
+    while ((assignment = strtok(NULL, " \t\r\n")) != NULL) {
+        char *equals = strchr(assignment, '=');
+        if (equals == NULL) {
+            continue;
+        }
+        *equals = '\0';
+        char *end = NULL;
+        const unsigned long value = strtoul(equals + 1, &end, 10);
+        if (*(equals + 1) == '\0' || end == equals + 1 || *end != '\0') {
+            continue;
+        }
+        (void)apply_profile_field(&engine->timing, assignment, (uint32_t)value);
+    }
+
+    zmk_dual_display_theme_context_set_timing_profile(&engine->left_theme, &engine->timing);
+    zmk_dual_display_theme_context_set_timing_profile(&engine->right_theme, &engine->timing);
+}
+
 static enum zmk_dual_display_transport_state transport_from_name(const char *name) {
     if (strcmp(name, "usb") == 0) {
         return ZMK_DUAL_DISPLAY_TRANSPORT_USB;
@@ -203,6 +263,7 @@ static enum zmk_dual_display_split_link_state split_from_name(const char *name) 
 
 static void handle_command(struct host_engine *engine, char *line) {
     char *command = strtok(line, " \t\r\n");
+    uint32_t elapsed_ms = 0;
     if (command == NULL) {
         return;
     }
@@ -210,7 +271,8 @@ static void handle_command(struct host_engine *engine, char *line) {
     if (strcmp(command, "tick") == 0) {
         char *amount = strtok(NULL, " \t\r\n");
         if (amount != NULL) {
-            engine->now_ms += (uint32_t)strtoul(amount, NULL, 10);
+            elapsed_ms = (uint32_t)strtoul(amount, NULL, 10);
+            engine->now_ms += elapsed_ms;
         }
     } else if (strcmp(command, "key") == 0) {
         apply_key(engine);
@@ -243,15 +305,17 @@ static void handle_command(struct host_engine *engine, char *line) {
                                                         ? ZMK_DUAL_DISPLAY_ACTIVITY_SLEEP
                                                         : ZMK_DUAL_DISPLAY_ACTIVITY_IDLE;
         }
+    } else if (strcmp(command, "profile") == 0) {
+        apply_profile(engine);
     }
 
-    print_snapshot(engine);
+    print_snapshot(engine, elapsed_ms);
 }
 
 int main(void) {
     struct host_engine engine;
     engine_init(&engine);
-    print_snapshot(&engine);
+    print_snapshot(&engine, 0);
 
     char line[256];
     while (fgets(line, sizeof(line), stdin) != NULL) {

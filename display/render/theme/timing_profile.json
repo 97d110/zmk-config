@@ -1,0 +1,13 @@
+{
+  "frame_ms": 250,
+  "animation_loop_ms": 1000,
+  "typing_light_ms": 0,
+  "typing_medium_ms": 5000,
+  "typing_high_ms": 12000,
+  "typing_peak_ms": 18000,
+  "quiet_before_decay_ms": 1000,
+  "decay_to_medium_ms": 0,
+  "decay_to_light_ms": 5000,
+  "decay_to_idle_ms": 7000,
+  "display_sleep_ms": 30000
+}

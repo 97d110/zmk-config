@@ -22,6 +22,7 @@ required_files=(
   ".agentic/context/display-engine-increment-5A.md"
   ".agentic/context/display-engine-increment-5B.md"
   ".agentic/context/display-engine-increment-6.md"
+  ".agentic/context/display-engine-increment-7.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -54,8 +55,11 @@ required_files=(
   "display/render/theme/README.md"
   "display/render/theme/dual_display_theme.c"
   "display/render/theme/dual_display_theme.h"
+  "display/render/theme/timing_profile.json"
+  "scripts/agentic/generate_theme_timing.py"
   "sim/README.md"
   "sim/engine/dual_display_engine.c"
+  "sim/engine/test_timing.py"
   "sim/web/app.py"
   "sim/web/Dockerfile"
   "sim/web/Makefile"
@@ -232,6 +236,11 @@ require_no_match 'dual_display_sim|ASCII|terminal preview' 'sim/README.md'
 require_no_match 'sim-build|sim-clean' 'Makefile'
 require_match 'struct zmk_dual_display_theme_context' 'display/render/theme/dual_display_theme.h'
 require_match 'ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_PEAK' 'display/render/theme/dual_display_theme.h'
+require_match 'struct zmk_dual_display_theme_timing_profile' 'display/render/theme/dual_display_theme.h'
+require_match 'zmk_dual_display_theme_context_observe_plan_elapsed' 'display/render/theme/dual_display_theme.h'
+require_match 'timing_profile\.json' 'CMakeLists.txt'
+require_match 'generate_theme_timing\.py' 'CMakeLists.txt'
+require_match 'dual_display_theme_timing\.h' 'CMakeLists.txt'
 require_match 'wants_next_frame' 'display/render/lvgl/screen_renderer.h'
 require_match 'ZMK_DUAL_DISPLAY_SIM_LOG' 'display/log.h'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
@@ -250,6 +259,13 @@ require_match 'firmware_state_listener_cb' 'docs/display-firmware-animation-flow
 require_match 'typing_activity_work_cb' 'docs/display-firmware-animation-flow.md'
 require_match '```mermaid' 'docs/display-firmware-animation-flow.md'
 require_match 'display-firmware-animation-flow\.md' '.agentic/context/repo-map.md'
+require_match 'display-engine-increment-7\.md' '.agentic/context/repo-map.md'
+require_match 'Display Engine Increment 7 Handoff' '.agentic/context/display-engine-increment-7.md'
+require_match 'Timing Profile' 'docs/display-firmware-animation-flow.md'
+require_match 'Display Plan' 'docs/display-firmware-animation-flow.md'
+require_match 'Theme State / Animation State' 'docs/display-firmware-animation-flow.md'
+require_match 'make sim-test' '.agentic/commands.md'
+require_match 'make sim-test' 'sim/README.md'
 
 require_match 'name:\s+zmk' 'config/west.yml'
 require_match 'revision:\s+v0\.3' 'config/west.yml'
@@ -265,5 +281,16 @@ require_match 'zephyr,console = &cdc_acm_uart' 'boards/arm/eyelash_sofle/eyelash
 require_match 'USB logging is enabled only through dedicated debug artifacts' 'AGENTS.md'
 require_match 'eyelash_sofle_right_settings_reset' '.agentic/troubleshooting/split-pairing.md'
 require_match 'central-only reset is incomplete' '.agentic/troubleshooting/split-pairing.md'
+
+tmp_header="$(mktemp -t zmk-dual-display-theme-timing-XXXXXX.h)"
+python3 "$ROOT_DIR/scripts/agentic/generate_theme_timing.py" \
+  --input "$ROOT_DIR/display/render/theme/timing_profile.json" \
+  --output "$tmp_header"
+if ! grep -q 'ZMK_DUAL_DISPLAY_THEME_TYPING_PEAK_MS 18000U' "$tmp_header"; then
+  fail "generated timing header did not contain expected peak threshold"
+fi
+rm -f "$tmp_header"
+
+python3 "$ROOT_DIR/sim/engine/test_timing.py" >/dev/null
 
 printf 'verify: ok\n'

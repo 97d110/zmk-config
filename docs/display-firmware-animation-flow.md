@@ -1,13 +1,17 @@
 # Display Firmware Animation Flow
 
 This document explains the firmware-side components that turn ZMK runtime
-state into the Eyelash Sofle dual nice!view animation state.
+sources into the Eyelash Sofle dual nice!view display pipeline:
+
+```text
+ZMK runtime -> Core State -> Display Plan -> Theme State / Animation State -> renderer
+```
 
 The current renderer still uses temporary placeholder visuals under
 `display/mock/`, but the state pipeline described here is durable firmware
 architecture. The display engine keeps firmware state capture, LVGL lifecycle,
-scene planning, and renderer implementation separate so the mock renderer can
-be replaced without rewriting the state flow.
+Display Plan construction, Theme State, and renderer implementation separate so
+the mock renderer can be replaced without rewriting the state flow.
 
 ## Logical Components
 
@@ -39,7 +43,7 @@ Central-only ZMK APIs, such as keymap and endpoint state, remain behind central
 role guards so right-side peripheral firmware does not link central-only
 objects.
 
-### Core State And Planner
+### Core State And Display Plan
 
 `display/core/dual_display_state.*` owns normalized display state:
 
@@ -50,7 +54,10 @@ objects.
 - split-link state,
 - layer mode.
 
-`display/core/dual_display_plan.*` turns that state into a screen plan:
+This is the **Core State**. It is theme-independent and remains relevant across
+any future animation theme.
+
+`display/core/dual_display_plan.*` turns that state into a **Display Plan**:
 
 - top status bar slots,
 - lower animation-region scene,
@@ -59,6 +66,9 @@ objects.
 
 This layer is LVGL-free and asset-free. It describes what should be drawn, not
 how it should be drawn.
+
+`struct zmk_dual_display_animation_plan` is part of the Display Plan. It is the
+theme-independent animation-section input, not theme-owned Animation State.
 
 ### LVGL Status Screen Boundary
 
@@ -74,7 +84,7 @@ At display creation, it:
 1. selects the firmware side from board config,
 2. initializes firmware-backed display state,
 3. creates the LVGL screen object,
-4. builds a core screen plan,
+4. builds a Display Plan,
 5. renders the initial screen through the renderer contract.
 
 Later event-driven refreshes enter through:
@@ -95,8 +105,25 @@ or asset playback engine should implement the same contract without changing
 the firmware state adapter or core planner.
 
 The renderer contract returns a small render result. Firmware uses that result
-to schedule bounded redraws while renderer-local theme state has active typing
-or decay frames.
+to schedule bounded redraws while renderer-local **Theme State / Animation
+State** has active typing, decay, or idle-loop frames.
+
+### Theme State And Timing Profile
+
+`display/render/theme/` owns Theme State / Animation State. It observes Display
+Plans and derives visual timeline values such as typing intensity, decay,
+frame ticks, idle-loop animation, and visual display-sleep. This layer cannot
+mutate Core State.
+
+`display/render/theme/timing_profile.json` is the default Timing Profile. The
+firmware CMake path and the host simulator both generate the same C-readable
+timing constants from that JSON, so simulator-tuned defaults and firmware
+defaults share one source.
+
+Visual display-sleep is Theme State, not ZMK global sleep. After the Timing
+Profile's idle timeout, the theme renders a frozen sleep frame and stops
+requesting refreshes. If ZMK reports global sleep through Core State, that
+Core State sleep still hard-overrides the theme immediately.
 
 ## Entry Points
 
@@ -252,9 +279,9 @@ The normal event render path is:
    `firmware_render_work` on `zmk_display_work_q()`.
 6. Render work calls
    `zmk_dual_display_status_screen_update_from_state()`.
-7. The LVGL boundary rebuilds the screen plan from state.
-8. The renderer contract draws the plan and returns whether theme-local state
-   wants another frame.
+7. The LVGL boundary rebuilds the Display Plan from Core State.
+8. The renderer contract draws the plan and returns whether Theme State wants
+   another frame.
 9. If another frame is requested, the firmware adapter schedules
    `theme_refresh_work`; that work redraws from the latest stored firmware
    state without requiring a new ZMK event.
@@ -303,7 +330,7 @@ flowchart TD
     subgraph Core["display/core"]
         Mapping["state mapping"]
         Plan["zmk_dual_display_build_screen_plan_from_state()"]
-        Scene["scene + status + animation plan"]
+        DisplayPlan["Display Plan<br/>status plan + animation inputs"]
     end
 
     subgraph LVGL["display/render/lvgl"]
@@ -314,7 +341,8 @@ flowchart TD
 
     subgraph Renderer["Renderer implementation"]
         Contract["screen_renderer.h contract"]
-        Theme["display/render/theme<br/>theme context"]
+        ThemeState["display/render/theme<br/>Theme State / Animation State"]
+        Timing["Timing Profile<br/>timing_profile.json -> generated C constants"]
         Mock["display/mock/lvgl placeholder renderer"]
         Future["future real asset / animation renderer"]
     end
@@ -368,11 +396,12 @@ flowchart TD
     RenderWork --> Refresh
     ThemeWork --> Refresh
     Refresh --> Plan
-    Plan --> Scene
-    Scene --> Contract
+    Plan --> DisplayPlan
+    DisplayPlan --> Contract
     Contract -->|"wants next frame"| ThemeWork
-    Contract --> Theme
-    Theme --> Mock
+    Contract --> ThemeState
+    Timing --> ThemeState
+    ThemeState --> Mock
     Contract -. "same contract later" .-> Future
     Mock --> Viewport
     Future --> Viewport

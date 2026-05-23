@@ -39,6 +39,18 @@ host C display/theme engine. Firmware display/theme logs remain visible for
 comparison, but they do not control the canvas state. This simulator is not a
 firmware build path and does not use local `west`.
 
+The timing editor changes only the Theme State Timing Profile. It does not
+create a second source of Core State or manual display behavior. Edits are sent
+to the host C engine using the same profile shape as
+`display/render/theme/timing_profile.json`; the export pane can be committed
+back to that JSON after tuning.
+
+Run the scripted timing checks with:
+
+```bash
+make sim-test
+```
+
 If the displays do not react, watch the `local serial` status and `serialParse`
 counter in the left log pane. `lines` increasing with `snapshots` stuck at zero
 usually means the host C engine did not start. Zero local serial ports usually

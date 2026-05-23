@@ -9,7 +9,7 @@ animation region visibly reflect renderer-local theme state.
   host simulator builds.
 - Added a theme context and snapshot that derive frame ticks, typing phase,
   short idle decay, scene, layer, energy, and charging interpretation from the
-  existing core screen plan.
+  existing Display Plan.
 - Updated the LVGL renderer contract to return whether the theme wants another
   frame and the current theme snapshot.
 - Updated the mock LVGL renderer so the status bar remains functional while the

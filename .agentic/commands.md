@@ -33,6 +33,17 @@ make -C sim/web docker
 Docker serves it on `http://localhost:8080` by default; override the host port
 with `SIM_WEB_PORT=<port>` from the repo root or `PORT=<port>` from `sim/web/`.
 
+Run the scripted host timing checks:
+
+```bash
+make sim-test
+```
+
+The simulator timing editor exports the same JSON shape as
+`display/render/theme/timing_profile.json`. Commit tuned defaults by updating
+that JSON; firmware CMake and the host simulator both generate their C timing
+constants from it.
+
 ## Firmware Builds
 
 Firmware artifacts are built by GitHub Actions from commits using the matrix in

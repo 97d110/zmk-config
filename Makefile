@@ -3,7 +3,7 @@ VERIFY_IMAGE ?= zmk-config-verify
 SIM_WEB_IMAGE ?= zmk-config-sim-web
 SIM_WEB_PORT ?= 8080
 
-.PHONY: help verify verify-docker context checklist sim sim-web sim-web-docker-build sim-web-docker
+.PHONY: help verify verify-docker context checklist sim sim-test sim-web sim-web-docker-build sim-web-docker
 
 help:
 	@printf '%s\n' \
@@ -11,6 +11,7 @@ help:
 		'  make verify         Run cheap repo validation checks.' \
 		'  make verify-docker  Run cheap validation checks in Docker.' \
 		'  make sim            Run the browser canvas display simulator.' \
+		'  make sim-test       Run scripted host timing checks.' \
 		'  make sim-web        Run the browser canvas display simulator locally.' \
 		'  make sim-web-docker Run the browser simulator in Docker.' \
 		'  make context        Show the repo map used by agents.' \
@@ -25,6 +26,9 @@ verify-docker:
 
 sim:
 	@python3 sim/web/app.py
+
+sim-test:
+	@python3 sim/engine/test_timing.py
 
 sim-web:
 	@python3 sim/web/app.py

@@ -11,8 +11,9 @@ Firmware event adapters refresh the active screen through
 renderer-boundary entry point; event-source mapping belongs under
 `display/firmware/`.
 
-The renderer contract returns whether the renderer-local theme wants another
-frame. Firmware uses that result to schedule bounded theme refresh work without
+The renderer contract returns whether the renderer-local animation state wants
+another frame. Firmware uses that result to schedule bounded animation refresh
+work without
 changing the core display state model.
 
 Renderer code must preserve the portrait display contract from `display/core/`:
@@ -24,7 +25,7 @@ During increment 1, the `screen_renderer.h` contract is implemented by
 increments should replace that provider with real LVGL rendering or animation
 playback while keeping the screen-entry logic here.
 
-Theme interpretation lives in `display/render/theme/` so the simulator and
+Theme interpretation lives in `display/render/animation/` so the simulator and
 firmware share the same phase and tick behavior without making that state part
 of `display/core/`.
 

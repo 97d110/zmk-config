@@ -11,16 +11,16 @@
 
 #include <display/core/dual_display_plan.h>
 #include <display/core/dual_display_state.h>
-#include <display/render/theme/dual_display_theme.h>
+#include <display/render/animation/dual_display_animation.h>
 
 #define HOST_TYPING_ACTIVE_MS 1100
 
 struct host_engine {
     struct zmk_dual_display_state left;
     struct zmk_dual_display_state right;
-    struct zmk_dual_display_theme_context left_theme;
-    struct zmk_dual_display_theme_context right_theme;
-    struct zmk_dual_display_theme_timing_profile timing;
+    struct zmk_dual_display_animation_context left_theme;
+    struct zmk_dual_display_animation_context right_theme;
+    struct zmk_dual_display_animation_timing_profile timing;
     uint32_t now_ms;
     uint32_t typing_until_ms;
 };
@@ -90,11 +90,11 @@ static void engine_init(struct host_engine *engine) {
     engine->left.battery = ZMK_DUAL_DISPLAY_BATTERY_51_100_CHARGING;
     engine->left.transport = ZMK_DUAL_DISPLAY_TRANSPORT_USB;
     engine->right.battery = ZMK_DUAL_DISPLAY_BATTERY_51_100;
-    engine->timing = zmk_dual_display_theme_default_timing_profile();
-    zmk_dual_display_theme_context_init(&engine->left_theme, ZMK_DUAL_DISPLAY_SIDE_LEFT);
-    zmk_dual_display_theme_context_init(&engine->right_theme, ZMK_DUAL_DISPLAY_SIDE_RIGHT);
-    zmk_dual_display_theme_context_set_timing_profile(&engine->left_theme, &engine->timing);
-    zmk_dual_display_theme_context_set_timing_profile(&engine->right_theme, &engine->timing);
+    engine->timing = zmk_dual_display_animation_default_timing_profile();
+    zmk_dual_display_animation_context_init(&engine->left_theme, ZMK_DUAL_DISPLAY_SIDE_LEFT);
+    zmk_dual_display_animation_context_init(&engine->right_theme, ZMK_DUAL_DISPLAY_SIDE_RIGHT);
+    zmk_dual_display_animation_context_set_timing_profile(&engine->left_theme, &engine->timing);
+    zmk_dual_display_animation_context_set_timing_profile(&engine->right_theme, &engine->timing);
     engine->now_ms = 0;
     engine->typing_until_ms = 0;
 }
@@ -110,14 +110,14 @@ static void maybe_return_idle(struct host_engine *engine) {
 static void observe(struct host_engine *engine, struct zmk_dual_display_dual_plan *plan,
                     uint32_t elapsed_ms) {
     zmk_dual_display_build_dual_plan_from_state(&engine->left, &engine->right, plan);
-    zmk_dual_display_theme_context_observe_plan_elapsed(&engine->left_theme, &plan->left,
+    zmk_dual_display_animation_context_observe_plan_elapsed(&engine->left_theme, &plan->left,
                                                         elapsed_ms);
-    zmk_dual_display_theme_context_observe_plan_elapsed(&engine->right_theme, &plan->right,
+    zmk_dual_display_animation_context_observe_plan_elapsed(&engine->right_theme, &plan->right,
                                                         elapsed_ms);
 }
 
 static void print_side_json(const char *key, const struct zmk_dual_display_state *state,
-                            const struct zmk_dual_display_theme_snapshot *theme) {
+                            const struct zmk_dual_display_animation_snapshot *theme) {
     printf("\"%s\":{\"state\":{\"side\":\"%s\",\"battery\":\"%s\",\"activity\":\"%s\","
            "\"transport\":\"%s\",\"split\":\"%s\",\"layer\":\"%s\"},"
            "\"theme\":{\"variant\":\"%s\",\"scene\":\"%s\",\"phase\":\"%s\","
@@ -126,11 +126,11 @@ static void print_side_json(const char *key, const struct zmk_dual_display_state
            "\"wantsNextFrame\":%s,\"nextDelayMs\":%u}}",
            key, zmk_dual_display_side_name(state->side), battery_name(state->battery),
            activity_name(state->activity), transport_name(state->transport),
-           split_name(state->split_link), zmk_dual_display_theme_layer_name(state->layer),
-           zmk_dual_display_theme_variant_name(theme->variant),
-           zmk_dual_display_theme_scene_name(theme->scene),
-           zmk_dual_display_theme_phase_name(theme->phase),
-           zmk_dual_display_theme_energy_name(theme->energy), theme->charging ? "true" : "false",
+           split_name(state->split_link), zmk_dual_display_animation_layer_name(state->layer),
+           zmk_dual_display_animation_variant_name(theme->variant),
+           zmk_dual_display_animation_scene_name(theme->scene),
+           zmk_dual_display_animation_phase_name(theme->phase),
+           zmk_dual_display_animation_energy_name(theme->energy), theme->charging ? "true" : "false",
            (unsigned int)theme->frame_tick, (unsigned int)theme->typing_elapsed_ms,
            (unsigned int)theme->decay_elapsed_ms, (unsigned int)theme->idle_elapsed_ms,
            (unsigned int)theme->loop_elapsed_ms, theme->wants_next_frame ? "true" : "false",
@@ -143,10 +143,10 @@ static void print_snapshot(struct host_engine *engine, uint32_t elapsed_ms) {
     struct zmk_dual_display_dual_plan plan;
     observe(engine, &plan, elapsed_ms);
 
-    const struct zmk_dual_display_theme_snapshot left_theme =
-        zmk_dual_display_theme_context_snapshot(&engine->left_theme);
-    const struct zmk_dual_display_theme_snapshot right_theme =
-        zmk_dual_display_theme_context_snapshot(&engine->right_theme);
+    const struct zmk_dual_display_animation_snapshot left_theme =
+        zmk_dual_display_animation_context_snapshot(&engine->left_theme);
+    const struct zmk_dual_display_animation_snapshot right_theme =
+        zmk_dual_display_animation_context_snapshot(&engine->right_theme);
 
     printf("{\"nowMs\":%u,", (unsigned int)engine->now_ms);
     print_side_json("left", &engine->left, &left_theme);
@@ -187,7 +187,7 @@ static void apply_battery(struct host_engine *engine, char *side, char *percent,
         zmk_dual_display_battery_bucket_from_percent((int16_t)atoi(percent), is_charging);
 }
 
-static bool apply_profile_field(struct zmk_dual_display_theme_timing_profile *profile,
+static bool apply_profile_field(struct zmk_dual_display_animation_timing_profile *profile,
                                 const char *field, uint32_t value) {
     if (strcmp(field, "frame_ms") == 0) {
         profile->frame_ms = value;
@@ -234,8 +234,8 @@ static void apply_profile(struct host_engine *engine) {
         (void)apply_profile_field(&engine->timing, assignment, (uint32_t)value);
     }
 
-    zmk_dual_display_theme_context_set_timing_profile(&engine->left_theme, &engine->timing);
-    zmk_dual_display_theme_context_set_timing_profile(&engine->right_theme, &engine->timing);
+    zmk_dual_display_animation_context_set_timing_profile(&engine->left_theme, &engine->timing);
+    zmk_dual_display_animation_context_set_timing_profile(&engine->right_theme, &engine->timing);
 }
 
 static enum zmk_dual_display_transport_state transport_from_name(const char *name) {

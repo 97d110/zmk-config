@@ -35,12 +35,12 @@ config ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS
       period as active; when a period completes without a keypress, the display
       activity returns to idle.
 
-config ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS
-    int "Theme animation refresh period in milliseconds"
+config ZMK_DUAL_DISPLAY_ANIMATION_REFRESH_PERIOD_MS
+    int "Animation refresh period in milliseconds"
     default 100
     range 50 5000
     help
-      Sets the display-only refresh cadence used while the renderer-local theme
+      Sets the display-only refresh cadence used while the renderer-local animation
       context reports active animation work. This does not change the core
       typing activity check period or normal ZMK event handling.
 

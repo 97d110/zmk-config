@@ -6,7 +6,7 @@ It contains proof-of-concept rendering code and placeholder geometry used to
 validate the display contract before real scene assets, animation playback, and
 state-driven rendering exist. Code here may depend on LVGL primitives and simple
 hard-coded shapes because it is not the engine contract. The mock renderer may
-consume the shared theme context, but it must keep throwaway shape composition
+consume the shared animation context, but it must keep throwaway shape composition
 inside this subtree.
 
 The placeholder must follow the portrait display contract: the top and bottom
@@ -27,7 +27,7 @@ edges are the short edges, and the left and right edges are the long edges.
 - Shared state types.
 - Scene planning policy.
 - Layer, battery, transport, or split-link mapping logic.
-- Theme state-machine policy that must also run in the simulator.
+- Animation state-machine policy that must also run in the simulator.
 - ZMK event adapters.
 - Final art or durable asset registry code.
 
@@ -35,5 +35,6 @@ edges are the short edges, and the left and right edges are the long edges.
 
 Future increments should be able to delete this directory once a real renderer
 and asset registry exist. If a piece of logic must survive that deletion, move it
-to `display/core/`, `display/render/lvgl/`, `display/firmware/`, or
-`display/assets/` first and document why it is no longer mock code.
+to `display/core/`, `display/render/lvgl/`, `display/render/recipe/`,
+`display/firmware/`, or the theme under `themes/<name>/<version>/` first and
+document why it is no longer mock code.

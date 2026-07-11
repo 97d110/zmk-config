@@ -105,7 +105,7 @@ lv_obj_t *zmk_display_status_screen(void) {
     status_screen = screen;
     LOG_INF("created %s dual display status screen", zmk_dual_display_side_name(side));
     if (last_render_result.wants_next_frame) {
-        zmk_dual_display_firmware_schedule_theme_refresh(last_render_result.next_delay_ms);
+        zmk_dual_display_firmware_schedule_animation_refresh(last_render_result.next_delay_ms);
     }
 
     return screen;

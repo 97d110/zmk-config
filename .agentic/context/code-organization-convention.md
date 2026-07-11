@@ -50,16 +50,21 @@ When writing code:
 
 ## Current Display-Engine Application
 
-For the local dual nice!view display engine:
+For the local dual nice!view display engine, generic reusable modules live under
+`display/` and theme-specific content lives under root `themes/`:
 
 - durable planning belongs under `display/core/`,
-- durable LVGL adapter code belongs under `display/render/lvgl/`,
-- durable LVGL renderer contracts and viewport mapping belong under
-  `display/render/lvgl/`,
-- durable display assets belong under `display/assets/`,
-- durable renderer-neutral asset composition planning belongs under
-  `display/render/recipe/`,
+- durable LVGL adapter code, renderer contracts, and viewport mapping belong
+  under `display/render/lvgl/`,
+- the durable generic animation controller (typing phase, decay, frame clock,
+  animation snapshot) belongs under `display/render/animation/`,
+- the durable generic composition instruction set and 1-bit compositor belong
+  under `display/render/recipe/`; they reference assets by opaque integer ID and
+  stay theme-independent,
+- theme-specific content — the scene-recipe planner, asset-ID vocabulary, timing
+  profile, source assets, and any mock asset backend — belongs under
+  `themes/<name>/<version>/` (e.g. `themes/space/v1/`), never under `display/`,
 - temporary placeholder rendering and throwaway geometry belong under
-  `display/mock/`.
+  `display/mock/` until the recipe render path replaces it.
 - all durable and temporary display layout code must preserve the physical
   portrait contract: short top/bottom edges, long left/right edges.

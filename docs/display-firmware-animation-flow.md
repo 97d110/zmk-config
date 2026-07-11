@@ -4,13 +4,13 @@ This document explains the firmware-side components that turn ZMK runtime
 sources into the Eyelash Sofle dual nice!view display pipeline:
 
 ```text
-ZMK runtime -> Core State -> Display Plan -> Theme State / Animation State -> renderer
+ZMK runtime -> Core State -> Display Plan -> Animation State -> renderer
 ```
 
 The current renderer still uses temporary placeholder visuals under
 `display/mock/`, but the state pipeline described here is durable firmware
 architecture. The display engine keeps firmware state capture, LVGL lifecycle,
-Display Plan construction, Theme State, and renderer implementation separate so
+Display Plan construction, Animation State, and renderer implementation separate so
 the mock renderer can be replaced without rewriting the state flow.
 
 ## Logical Components
@@ -108,22 +108,22 @@ or asset playback engine should implement the same contract without changing
 the firmware state adapter or core planner.
 
 The renderer contract returns a small render result. Firmware uses that result
-to schedule bounded redraws while renderer-local **Theme State / Animation
+to schedule bounded redraws while renderer-local **Animation State / Animation
 State** has active typing, decay, or idle-loop frames.
 
-### Theme State And Timing Profile
+### Animation State And Timing Profile
 
-`display/render/theme/` owns Theme State / Animation State. It observes Display
+`display/render/animation/` owns Animation State. It observes Display
 Plans and derives visual timeline values such as typing intensity, decay,
 frame ticks, idle-loop animation, and visual display-sleep. This layer cannot
 mutate Core State.
 
-`display/render/theme/timing_profile.json` is the default Timing Profile. The
+`themes/space/v1/timing_profile.json` is the active theme's Timing Profile. The
 firmware CMake path and the host simulator both generate the same C-readable
 timing constants from that JSON, so simulator-tuned defaults and firmware
 defaults share one source.
 
-Visual display-sleep is Theme State, not ZMK global sleep. After the Timing
+Visual display-sleep is Animation State, not ZMK global sleep. After the Timing
 Profile's idle timeout, the theme renders a frozen sleep frame and stops
 requesting refreshes. If ZMK reports global sleep through Core State, that
 Core State sleep still hard-overrides the theme immediately.
@@ -289,10 +289,10 @@ The normal event render path is:
 6. Render work calls
    `zmk_dual_display_status_screen_update_from_state()`.
 7. The LVGL boundary rebuilds the Display Plan from Core State.
-8. The renderer contract draws the plan and returns whether Theme State wants
+8. The renderer contract draws the plan and returns whether Animation State wants
    another frame.
 9. If another frame is requested, the firmware adapter schedules
-   `theme_refresh_work`; that work redraws from the latest stored firmware
+   `animation_refresh_work`; that work redraws from the latest stored firmware
    state without requiring a new ZMK event.
 
 Typing period work is similar, but it is driven by a delayed configurable check
@@ -331,7 +331,7 @@ flowchart TD
         Compare["states_equal(previous, next)"]
         KeyFlag["typing_period_had_keypress = true"]
         TypingWork["typing_activity_work_cb()<br/>configured delayed work"]
-        ThemeWork["theme_refresh_work_cb()<br/>renderer requested frame"]
+        ThemeWork["animation_refresh_work_cb()<br/>renderer requested frame"]
         CompleteLog["complete display state log"]
         RenderWork["firmware_render_work"]
     end
@@ -350,7 +350,7 @@ flowchart TD
 
     subgraph Renderer["Renderer implementation"]
         Contract["screen_renderer.h contract"]
-        ThemeState["display/render/theme<br/>Theme State / Animation State"]
+        ThemeState["display/render/animation<br/>Animation State"]
         Timing["Timing Profile<br/>timing_profile.json -> generated C constants"]
         Mock["display/mock/lvgl placeholder renderer"]
         Future["future real asset / animation renderer"]
@@ -428,8 +428,8 @@ Important runtime logs include:
 - state transition logs when a display field changes,
 - no-op logs for handled events that do not change the visual state,
 - once-per-period complete state logs from the typing lifecycle,
-- theme scene entry and phase-change logs,
-- theme refresh-loop start and stop logs,
+- animation scene entry and phase-change logs,
+- animation refresh-loop start and stop logs,
 - render queueing and refresh failures.
 
 The typing lifecycle intentionally avoids per-key debug logs. The complete

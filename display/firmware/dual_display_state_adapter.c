@@ -57,20 +57,20 @@ static struct zmk_dual_display_state firmware_state;
 static bool firmware_state_ready;
 static bool typing_period_active;
 static bool typing_period_had_keypress;
-static bool theme_refresh_loop_active;
+static bool animation_refresh_loop_active;
 
 static void firmware_render_work_cb(struct k_work *work);
 static int render_latest_firmware_state(const char *reason);
-static void theme_refresh_work_cb(struct k_work *work);
+static void animation_refresh_work_cb(struct k_work *work);
 static void typing_activity_work_cb(struct k_work *work);
 
 K_MUTEX_DEFINE(firmware_state_mutex);
 K_WORK_DEFINE(firmware_render_work, firmware_render_work_cb);
-K_WORK_DELAYABLE_DEFINE(theme_refresh_work, theme_refresh_work_cb);
+K_WORK_DELAYABLE_DEFINE(animation_refresh_work, animation_refresh_work_cb);
 K_WORK_DELAYABLE_DEFINE(typing_activity_work, typing_activity_work_cb);
 
 #define TYPING_CHECK_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS)
-#define THEME_REFRESH_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS)
+#define ANIMATION_REFRESH_PERIOD K_MSEC(CONFIG_ZMK_DUAL_DISPLAY_ANIMATION_REFRESH_PERIOD_MS)
 #define LAYER_SYNC_BEHAVIOR "DDL_SYNC"
 
 static bool states_equal(const struct zmk_dual_display_state *left,
@@ -539,35 +539,35 @@ static void latest_firmware_state(struct zmk_dual_display_state *out_state) {
     *out_state = state;
 }
 
-static void schedule_theme_refresh_from_last_render(const char *reason) {
+static void schedule_animation_refresh_from_last_render(const char *reason) {
     uint32_t delay_ms = 0;
     const bool wants_next_frame = zmk_dual_display_status_screen_next_frame_delay(&delay_ms);
 
     if (!wants_next_frame) {
-        const int cancel_err = k_work_cancel_delayable(&theme_refresh_work);
+        const int cancel_err = k_work_cancel_delayable(&animation_refresh_work);
         ARG_UNUSED(cancel_err);
-        if (theme_refresh_loop_active) {
-            theme_refresh_loop_active = false;
-            ZMK_DUAL_DISPLAY_LOG_DBG("theme refresh loop stopped: reason=%s", reason);
+        if (animation_refresh_loop_active) {
+            animation_refresh_loop_active = false;
+            ZMK_DUAL_DISPLAY_LOG_DBG("animation refresh loop stopped: reason=%s", reason);
         }
         return;
     }
 
-    const k_timeout_t timeout = delay_ms > 0 ? K_MSEC(delay_ms) : THEME_REFRESH_PERIOD;
+    const k_timeout_t timeout = delay_ms > 0 ? K_MSEC(delay_ms) : ANIMATION_REFRESH_PERIOD;
     const int err =
-        k_work_reschedule_for_queue(zmk_display_work_q(), &theme_refresh_work, timeout);
+        k_work_reschedule_for_queue(zmk_display_work_q(), &animation_refresh_work, timeout);
     if (err < 0) {
-        ZMK_DUAL_DISPLAY_LOG_WRN("failed to schedule theme refresh: reason=%s err=%d", reason,
+        ZMK_DUAL_DISPLAY_LOG_WRN("failed to schedule animation refresh: reason=%s err=%d", reason,
                                  err);
         return;
     }
 
-    if (!theme_refresh_loop_active) {
-        theme_refresh_loop_active = true;
-        ZMK_DUAL_DISPLAY_LOG_DBG("theme refresh loop started: reason=%s period_ms=%u", reason,
+    if (!animation_refresh_loop_active) {
+        animation_refresh_loop_active = true;
+        ZMK_DUAL_DISPLAY_LOG_DBG("animation refresh loop started: reason=%s period_ms=%u", reason,
                                  (unsigned int)(delay_ms > 0
                                                     ? delay_ms
-                                                    : CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS));
+                                                    : CONFIG_ZMK_DUAL_DISPLAY_ANIMATION_REFRESH_PERIOD_MS));
     }
 }
 
@@ -582,13 +582,13 @@ static int render_latest_firmware_state(const char *reason) {
         return err;
     }
 
-    schedule_theme_refresh_from_last_render(reason);
+    schedule_animation_refresh_from_last_render(reason);
     return 0;
 }
 
-void zmk_dual_display_firmware_schedule_theme_refresh(uint32_t delay_ms) {
+void zmk_dual_display_firmware_schedule_animation_refresh(uint32_t delay_ms) {
     ARG_UNUSED(delay_ms);
-    schedule_theme_refresh_from_last_render("initial-screen");
+    schedule_animation_refresh_from_last_render("initial-screen");
 }
 
 static void firmware_render_work_cb(struct k_work *work) {
@@ -597,10 +597,10 @@ static void firmware_render_work_cb(struct k_work *work) {
     (void)render_latest_firmware_state("state-event");
 }
 
-static void theme_refresh_work_cb(struct k_work *work) {
+static void animation_refresh_work_cb(struct k_work *work) {
     ARG_UNUSED(work);
 
-    (void)render_latest_firmware_state("theme-frame");
+    (void)render_latest_firmware_state("animation-frame");
 }
 
 static void typing_activity_work_cb(struct k_work *work) {

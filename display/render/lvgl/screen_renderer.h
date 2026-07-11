@@ -8,12 +8,12 @@
 #include <lvgl.h>
 
 #include <display/core/dual_display_plan.h>
-#include <display/render/theme/dual_display_theme.h>
+#include <display/render/animation/dual_display_animation.h>
 
 struct zmk_dual_display_render_result {
     bool wants_next_frame;
     uint32_t next_delay_ms;
-    struct zmk_dual_display_theme_snapshot theme;
+    struct zmk_dual_display_animation_snapshot theme;
 };
 
 /*

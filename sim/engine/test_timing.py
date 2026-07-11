@@ -16,23 +16,23 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-TIMING_PROFILE = ROOT_DIR / "display" / "render" / "theme" / "timing_profile.json"
-TIMING_GENERATOR = ROOT_DIR / "scripts" / "agentic" / "generate_theme_timing.py"
+TIMING_PROFILE = ROOT_DIR / "themes" / "space" / "v1" / "timing_profile.json"
+TIMING_GENERATOR = ROOT_DIR / "scripts" / "agentic" / "generate_animation_timing.py"
 GENERATED_INCLUDE_DIR = ROOT_DIR / "sim" / "build" / "generated-test"
 GENERATED_HEADER = (
-    GENERATED_INCLUDE_DIR / "display" / "render" / "theme" / "dual_display_theme_timing.h"
+    GENERATED_INCLUDE_DIR / "display" / "render" / "animation" / "dual_display_animation_timing.h"
 )
 ENGINE_BIN = ROOT_DIR / "sim" / "build" / "dual_display_engine_test"
 ENGINE_SOURCES = [
     ROOT_DIR / "sim" / "engine" / "dual_display_engine.c",
     ROOT_DIR / "display" / "core" / "dual_display_state.c",
     ROOT_DIR / "display" / "core" / "dual_display_plan.c",
-    ROOT_DIR / "display" / "render" / "theme" / "dual_display_theme.c",
+    ROOT_DIR / "display" / "render" / "animation" / "dual_display_animation.c",
 ]
 
 
 def load_timing_tools():
-    spec = importlib.util.spec_from_file_location("generate_theme_timing", TIMING_GENERATOR)
+    spec = importlib.util.spec_from_file_location("generate_animation_timing", TIMING_GENERATOR)
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot load theme timing generator")
     module = importlib.util.module_from_spec(spec)

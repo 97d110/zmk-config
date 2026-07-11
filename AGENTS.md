@@ -20,6 +20,7 @@ This repository is the primary ZMK config and board-module home for the Eyelash 
 - When changing hardware behavior, inspect both the board files under `boards/arm/eyelash_sofle/` and the runtime config under `config/`.
 - USB logging is enabled only through dedicated debug artifacts. Normal firmware builds should stay free of debug logging snippets.
 - When planning or writing code, follow `.agentic/context/code-organization-convention.md`: keep a pure distinction between durable product/core code and temporary/mock code, assets, fixtures, or scaffolding.
+- Keep generic reusable engine code under `display/` and theme-specific content (scene-recipe planner, asset-ID vocabulary, timing profile, source assets, mock backend) under root `themes/<name>/<version>/`. The generic layer references assets by opaque integer ID only.
 - When adding or changing display-engine code under `display/`, follow `.agentic/context/display-engine-logging-convention.md` and update that convention if a new display subsystem needs different logging behavior.
 - Treat the nice!view displays as portrait rectangles: top and bottom edges are short, left and right edges are long. The top status bar must be laid out across the narrow top edge.
 - Treat `keymap-drawer/*.svg` and `keymap-drawer/*.yaml` as generated output if present. Update the source config first, then regenerate.

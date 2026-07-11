@@ -1,19 +1,22 @@
 # Display Render Recipe Spec
 
-This document defines the planned shared composition boundary for asset-backed
-display animation. It is a specification only; Increment 8A does not implement
-the planner, compositor, generated assets, simulator rendering, or firmware
-rendering.
+This document defines the shared composition boundary for asset-backed display
+animation. The generic command model and compositor live under
+`display/render/recipe/`; the theme-specific planner that emits recipes lives
+under `themes/<name>/<version>/` (first theme: `themes/space/v1/`). Increment 8A
+specified this boundary; increments 8C/8D implement it.
 
 ## Boundary
 
-`display/render/recipe/` is the intended home for shared render-recipe planning.
-It sits after `display/render/theme/` and before medium-specific renderers:
+`display/render/recipe/` is the home for the generic recipe command model and
+1-bit compositor. The theme-specific planner (under `themes/`) sits after
+`display/render/animation/`, emits recipes, and the compositor consumes them
+before medium-specific renderers:
 
 ```text
 Core State
   -> Display Plan
-  -> Theme State / Animation State
+  -> Animation State
   -> Render Recipe
   -> firmware LVGL renderer or simulator canvas renderer
 ```
@@ -26,10 +29,10 @@ so firmware and simulator can consume the same composition decisions.
 
 Planner input:
 
-- the existing `zmk_dual_display_theme_snapshot`,
+- the existing `zmk_dual_display_animation_snapshot`,
 - the animation-region bounds from the existing Display Plan,
-- an asset registry identifier set generated or validated from
-  `display/assets/`.
+- the theme's asset-ID vocabulary (opaque integer IDs) under
+  `themes/<name>/<version>/`.
 
 Planner output:
 
@@ -95,11 +98,11 @@ phase behavior should be:
 - `typing-peak`: high recipe plus denser energy effects and an asteroid
   emphasis cadence.
 - `decay`: reduce speed streaks and twinkles while preserving the same shared
-  Theme State timing and frame clock.
+  Animation State timing and frame clock.
 
 The right/peripheral recipe can remain placeholder-defined until a matching
 environment asset set is available. Sleep, link-error, and fallback scenes keep
-their existing override priority from Display Plan and Theme State.
+their existing override priority from Display Plan and Animation State.
 
 ## Renderer Responsibilities
 

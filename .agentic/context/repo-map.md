@@ -47,10 +47,14 @@
 - `.agentic/context/display-engine-increment-7.md`
   Handoff note for the shared Timing Profile, generated C timing constants,
   simulator timing editor, scripted timing checks, visual display-sleep, and
-  Core State / Display Plan / Theme State terminology alignment.
+  Core State / Display Plan / Animation State terminology alignment.
 - `.agentic/context/display-engine-increment-8A.md`
   Handoff note for the v13 asset analysis, source-sprite interpretation, and
   planned shared render-recipe boundary.
+- `.agentic/context/display-engine-increment-8B.md`
+  Handoff note for the structural refactor: renamed the generic animation
+  controller theme->animation and moved theme-specific content (assets, timing
+  profile) to the root `themes/` tree.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
@@ -58,32 +62,36 @@
 - `display/render/lvgl/`
   Durable LVGL firmware adapter boundary, renderer contract, and viewport
   mapping. The current renderer contract is implemented by `display/mock/`.
-- `display/render/theme/`
-  Durable LVGL-free theme interpretation shared by firmware and simulator
-  builds. Owns renderer-local frame ticks, typing phase, decay state,
-  visual display-sleep, and the JSON Timing Profile generated into C constants
-  during firmware and simulator builds.
+- `display/render/animation/`
+  Durable generic, theme-independent animation controller shared by firmware and
+  simulator builds. Owns renderer-local frame ticks, typing phase, decay state,
+  visual display-sleep, and the animation snapshot. Reads a theme-supplied Timing
+  Profile generated into C constants during firmware and simulator builds.
 - `display/render/recipe/`
-  Planned durable LVGL-free shared composition layer. It should consume Theme
-  State snapshots and animation bounds, then emit ordered renderer-neutral
-  commands for firmware and simulator renderers.
+  Durable generic, theme-independent composition layer: the recipe command model
+  and the 1-bit compositor. Assets are referenced by opaque integer ID; the
+  theme-specific planner that emits recipe commands lives under `themes/`.
 - `display/firmware/`
   Durable ZMK firmware state adapter. It maps runtime battery, activity,
   keypress, endpoint, layer, USB, BLE, and split-link sources into
   `display/core/` state and queues refreshes on the ZMK display work queue.
-  It also runs the bounded theme refresh loop while renderer-local state wants
-  another frame.
+  It also runs the bounded animation refresh loop while renderer-local state
+  wants another frame.
 - `display/mock/`
   Temporary proof-of-concept placeholder LVGL rendering. It must preserve the
   portrait display contract and should be easy to replace or delete.
+- `themes/`
+  Root home for theme-specific content, versioned per theme (e.g.
+  `themes/space/v1/`). Holds each theme's scene-recipe planner, asset-ID
+  vocabulary, `timing_profile.json` tuning, source assets under `assets/`, and
+  any temporary mock asset backend. No generic engine code lives here.
 - `sim/`
   Browser canvas simulator for the dual-display scene engine. It provides
   a local Python serial bridge for real debug firmware logs, a host C runner
-  under `sim/engine/` built from `display/core/` and `display/render/theme/`,
+  under `sim/engine/` built from `display/core/` and `display/render/animation/`,
   a timing editor that updates the host engine's Timing Profile, scripted
   timing checks, and a canvas renderer in `sim/web/`. Core keyboard events from
-  hardware are the controller; firmware display/theme logs remain diagnostics
-  only.
+  hardware are the controller; firmware display logs remain diagnostics only.
 - `.agentic/troubleshooting/split-pairing.md`
   Short recovery note for stale BLE split bonds, including the requirement to reset both halves.
 - `docs/display-firmware-animation-flow.md`
@@ -91,8 +99,8 @@
   including ZMK event entry points, state lifecycle, configurable typing
   activity cycle, render lifecycle, and a complete system wiring diagram.
 - `docs/display-render-recipe-spec.md`
-  Durable specification for the planned shared render-recipe boundary and
-  initial central typing-intensity composition behavior.
+  Durable specification for the shared render-recipe boundary and initial central
+  typing-intensity composition behavior.
 - `docs/.meta/zmk_dual_display_animation_theme_tech_spec_v5.md`
   Current v5 animation-theme planning spec. It summarizes implemented
   display-engine increments, preserves the lean core activity model, defines
@@ -108,4 +116,4 @@
 - Future local display-engine work should stay local to this repo and must not reintroduce donor repos as runtime dependencies.
 - Display-engine code changes must follow `.agentic/context/display-engine-logging-convention.md`.
 - Planning and code changes must follow `.agentic/context/code-organization-convention.md`.
-- The planned display-engine boundary is `display/core/`, `display/firmware/`, `display/render/lvgl/`, `display/render/theme/`, `display/render/recipe/`, `display/assets/`, and `sim/`; see `context/display-engine-increment-0.md` before changing display wiring.
+- The display-engine boundary is `display/core/`, `display/firmware/`, `display/render/lvgl/`, `display/render/animation/`, `display/render/recipe/`, and `sim/` (all generic), plus theme-specific content under root `themes/<name>/<version>/`; see `context/display-engine-increment-0.md` before changing display wiring.

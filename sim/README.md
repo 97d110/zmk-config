@@ -3,7 +3,7 @@
 The simulator is a browser canvas app served from localhost. It renders the
 dual nice!view displays directly in HTML/CSS/canvas and listens to USB CDC logs
 from debug firmware through the local Python serial bridge. Keyboard events are
-fed into a host C runner built from `display/core/` and `display/render/theme/`;
+fed into a host C runner built from `display/core/` and `display/render/animation/`;
 the canvas renders the C-derived snapshot.
 
 Run it from the repo root:
@@ -39,10 +39,10 @@ host C display/theme engine. Firmware display/theme logs remain visible for
 comparison, but they do not control the canvas state. This simulator is not a
 firmware build path and does not use local `west`.
 
-The timing editor changes only the Theme State Timing Profile. It does not
+The timing editor changes only the Animation State Timing Profile. It does not
 create a second source of Core State or manual display behavior. Edits are sent
 to the host C engine using the same profile shape as
-`display/render/theme/timing_profile.json`; the export pane can be committed
+`themes/space/v1/timing_profile.json`; the export pane can be committed
 back to that JSON after tuning.
 
 Run the scripted timing checks with:

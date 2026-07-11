@@ -7,10 +7,10 @@
 
 #include <display/log.h>
 #include <display/render/lvgl/viewport.h>
-#include <display/render/theme/dual_display_theme.h>
+#include <display/render/animation/dual_display_animation.h>
 
 static lv_color_t canvas_buf[ZMK_DUAL_DISPLAY_LONG_EDGE * ZMK_DUAL_DISPLAY_SHORT_EDGE];
-static struct zmk_dual_display_theme_context theme_contexts[2];
+static struct zmk_dual_display_animation_context theme_contexts[2];
 
 static lv_obj_t *create_canvas(lv_obj_t *screen) {
     lv_obj_t *canvas = lv_canvas_create(screen);
@@ -326,30 +326,30 @@ static uint8_t energy_intensity(enum zmk_dual_display_energy_level energy) {
     }
 }
 
-static uint8_t phase_intensity(enum zmk_dual_display_theme_phase phase) {
+static uint8_t phase_intensity(enum zmk_dual_display_animation_phase phase) {
     switch (phase) {
-    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_LIGHT:
+    case ZMK_DUAL_DISPLAY_ANIMATION_PHASE_TYPING_LIGHT:
         return 1;
-    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_MEDIUM:
+    case ZMK_DUAL_DISPLAY_ANIMATION_PHASE_TYPING_MEDIUM:
         return 2;
-    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_HIGH:
+    case ZMK_DUAL_DISPLAY_ANIMATION_PHASE_TYPING_HIGH:
         return 3;
-    case ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_PEAK:
+    case ZMK_DUAL_DISPLAY_ANIMATION_PHASE_TYPING_PEAK:
         return 4;
-    case ZMK_DUAL_DISPLAY_THEME_PHASE_DECAY:
+    case ZMK_DUAL_DISPLAY_ANIMATION_PHASE_DECAY:
         return 1;
     default:
         return 0;
     }
 }
 
-static struct zmk_dual_display_theme_context *theme_context_for_side(
+static struct zmk_dual_display_animation_context *theme_context_for_side(
     enum zmk_dual_display_side side) {
     return &theme_contexts[side == ZMK_DUAL_DISPLAY_SIDE_RIGHT ? 1 : 0];
 }
 
 static void render_starfield(lv_obj_t *screen, const struct zmk_dual_display_rect *bounds,
-                             const struct zmk_dual_display_theme_snapshot *theme) {
+                             const struct zmk_dual_display_animation_snapshot *theme) {
     const uint8_t stars = 7 + energy_intensity(theme->energy) * 3;
     for (uint8_t i = 0; i < stars; i++) {
         const uint8_t x = (uint8_t)((i * 17 + theme->frame_tick * 3) % bounds->width);
@@ -407,7 +407,7 @@ static void render_layer_modifier(lv_obj_t *screen, const struct zmk_dual_displa
 
 static void render_primary_theme(lv_obj_t *screen,
                                  const struct zmk_dual_display_animation_plan *plan,
-                                 const struct zmk_dual_display_theme_snapshot *theme) {
+                                 const struct zmk_dual_display_animation_snapshot *theme) {
     const uint8_t intensity = phase_intensity(theme->phase);
     const uint8_t energy = energy_intensity(theme->energy);
     const uint8_t body = 7 + intensity + energy;
@@ -432,7 +432,7 @@ static void render_primary_theme(lv_obj_t *screen,
     };
     add_rect(screen, &meteor, false);
 
-    if (theme->phase == ZMK_DUAL_DISPLAY_THEME_PHASE_DECAY) {
+    if (theme->phase == ZMK_DUAL_DISPLAY_ANIMATION_PHASE_DECAY) {
         const struct zmk_dual_display_rect wake = {
             .x = centered_in(plan->bounds.x, plan->bounds.width, 28),
             .y = y + body + 8,
@@ -445,7 +445,7 @@ static void render_primary_theme(lv_obj_t *screen,
 
 static void render_secondary_theme(lv_obj_t *screen,
                                    const struct zmk_dual_display_animation_plan *plan,
-                                   const struct zmk_dual_display_theme_snapshot *theme) {
+                                   const struct zmk_dual_display_animation_snapshot *theme) {
     const uint8_t intensity = phase_intensity(theme->phase);
     const uint8_t energy = energy_intensity(theme->energy);
     const uint8_t horizon_y = plan->bounds.y + plan->bounds.height - 26 - energy * 3;
@@ -480,7 +480,7 @@ static void render_secondary_theme(lv_obj_t *screen,
 
 static void render_scene_normal(lv_obj_t *screen,
                                 const struct zmk_dual_display_animation_plan *plan,
-                                const struct zmk_dual_display_theme_snapshot *theme) {
+                                const struct zmk_dual_display_animation_snapshot *theme) {
     add_rect(screen, &plan->bounds, false);
     render_starfield(screen, &plan->bounds, theme);
     render_layer_modifier(screen, &plan->bounds, theme->layer);
@@ -603,7 +603,7 @@ static void log_scene_change_once(const struct zmk_dual_display_animation_plan *
 
 static void render_theme_phase_marker(lv_obj_t *screen,
                                       const struct zmk_dual_display_animation_plan *plan,
-                                      const struct zmk_dual_display_theme_snapshot *theme) {
+                                      const struct zmk_dual_display_animation_snapshot *theme) {
     const uint8_t intensity = phase_intensity(theme->phase);
     if (intensity == 0) {
         return;
@@ -622,10 +622,10 @@ static void render_theme_phase_marker(lv_obj_t *screen,
 
 static struct zmk_dual_display_render_result render_animation_region(
     lv_obj_t *screen, const struct zmk_dual_display_screen_plan *screen_plan) {
-    struct zmk_dual_display_theme_context *context = theme_context_for_side(screen_plan->side);
-    zmk_dual_display_theme_context_observe_plan(context, screen_plan);
-    const struct zmk_dual_display_theme_snapshot theme =
-        zmk_dual_display_theme_context_snapshot(context);
+    struct zmk_dual_display_animation_context *context = theme_context_for_side(screen_plan->side);
+    zmk_dual_display_animation_context_observe_plan(context, screen_plan);
+    const struct zmk_dual_display_animation_snapshot theme =
+        zmk_dual_display_animation_context_snapshot(context);
     const struct zmk_dual_display_animation_plan *plan = &screen_plan->animation;
 
     switch (theme.scene) {

@@ -26,17 +26,17 @@ FIELDS: tuple[str, ...] = (
 )
 
 MACROS: dict[str, str] = {
-    "frame_ms": "ZMK_DUAL_DISPLAY_THEME_FRAME_MS",
-    "animation_loop_ms": "ZMK_DUAL_DISPLAY_THEME_ANIMATION_LOOP_MS",
-    "typing_light_ms": "ZMK_DUAL_DISPLAY_THEME_TYPING_LIGHT_MS",
-    "typing_medium_ms": "ZMK_DUAL_DISPLAY_THEME_TYPING_MEDIUM_MS",
-    "typing_high_ms": "ZMK_DUAL_DISPLAY_THEME_TYPING_HIGH_MS",
-    "typing_peak_ms": "ZMK_DUAL_DISPLAY_THEME_TYPING_PEAK_MS",
-    "quiet_before_decay_ms": "ZMK_DUAL_DISPLAY_THEME_QUIET_BEFORE_DECAY_MS",
-    "decay_to_medium_ms": "ZMK_DUAL_DISPLAY_THEME_DECAY_TO_MEDIUM_MS",
-    "decay_to_light_ms": "ZMK_DUAL_DISPLAY_THEME_DECAY_TO_LIGHT_MS",
-    "decay_to_idle_ms": "ZMK_DUAL_DISPLAY_THEME_DECAY_TO_IDLE_MS",
-    "display_sleep_ms": "ZMK_DUAL_DISPLAY_THEME_DISPLAY_SLEEP_MS",
+    "frame_ms": "ZMK_DUAL_DISPLAY_ANIMATION_FRAME_MS",
+    "animation_loop_ms": "ZMK_DUAL_DISPLAY_ANIMATION_ANIMATION_LOOP_MS",
+    "typing_light_ms": "ZMK_DUAL_DISPLAY_ANIMATION_TYPING_LIGHT_MS",
+    "typing_medium_ms": "ZMK_DUAL_DISPLAY_ANIMATION_TYPING_MEDIUM_MS",
+    "typing_high_ms": "ZMK_DUAL_DISPLAY_ANIMATION_TYPING_HIGH_MS",
+    "typing_peak_ms": "ZMK_DUAL_DISPLAY_ANIMATION_TYPING_PEAK_MS",
+    "quiet_before_decay_ms": "ZMK_DUAL_DISPLAY_ANIMATION_QUIET_BEFORE_DECAY_MS",
+    "decay_to_medium_ms": "ZMK_DUAL_DISPLAY_ANIMATION_DECAY_TO_MEDIUM_MS",
+    "decay_to_light_ms": "ZMK_DUAL_DISPLAY_ANIMATION_DECAY_TO_LIGHT_MS",
+    "decay_to_idle_ms": "ZMK_DUAL_DISPLAY_ANIMATION_DECAY_TO_IDLE_MS",
+    "display_sleep_ms": "ZMK_DUAL_DISPLAY_ANIMATION_DISPLAY_SLEEP_MS",
 }
 
 
@@ -126,7 +126,7 @@ def write_header(profile: dict[str, int], source: Path, output: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate display theme timing constants")
+    parser = argparse.ArgumentParser(description="Generate display animation timing constants")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--print-assignments", action="store_true")
@@ -139,7 +139,7 @@ def main() -> int:
         if args.print_assignments:
             print(format_profile_assignments(profile))
     except ProfileError as exc:
-        parser.exit(1, f"theme timing profile error: {exc}\n")
+        parser.exit(1, f"animation timing profile error: {exc}\n")
 
     return 0
 

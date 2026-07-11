@@ -24,6 +24,7 @@ required_files=(
   ".agentic/context/display-engine-increment-6.md"
   ".agentic/context/display-engine-increment-7.md"
   ".agentic/context/display-engine-increment-8A.md"
+  ".agentic/context/display-engine-increment-8B.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -35,8 +36,8 @@ required_files=(
   "config/eyelash_sofle.keymap"
   "config/eyelash_sofle.json"
   "display/README.md"
-  "display/assets/README.md"
-  "display/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md"
+  "themes/README.md"
+  "themes/space/v1/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md"
   "display/core/dual_display_plan.c"
   "display/core/dual_display_plan.h"
   "display/core/dual_display_state.c"
@@ -56,12 +57,12 @@ required_files=(
   "display/render/lvgl/dual_display_status_screen.c"
   "display/render/lvgl/viewport.c"
   "display/render/lvgl/viewport.h"
-  "display/render/theme/README.md"
-  "display/render/theme/dual_display_theme.c"
-  "display/render/theme/dual_display_theme.h"
-  "display/render/theme/timing_profile.json"
+  "display/render/animation/README.md"
+  "display/render/animation/dual_display_animation.c"
+  "display/render/animation/dual_display_animation.h"
+  "themes/space/v1/timing_profile.json"
   "dts/bindings/behaviors/zmk,behavior-dual-display-layer-sync.yaml"
-  "scripts/agentic/generate_theme_timing.py"
+  "scripts/agentic/generate_animation_timing.py"
   "sim/README.md"
   "sim/engine/dual_display_engine.c"
   "sim/engine/test_timing.py"
@@ -159,7 +160,7 @@ require_match 'ZMK_DUAL_DISPLAY_LOG_WRN' 'display/core/dual_display_plan.c'
 require_match 'display/core/dual_display_state.c' 'CMakeLists.txt'
 require_match 'display/firmware/dual_display_state_adapter.c' 'CMakeLists.txt'
 require_match 'display/firmware/dual_display_layer_sync_behavior.c' 'CMakeLists.txt'
-require_match 'display/render/theme/dual_display_theme.c' 'CMakeLists.txt'
+require_match 'display/render/animation/dual_display_animation.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_build_screen_plan_from_state' 'display/render/lvgl/dual_display_status_screen.c'
 require_match 'zmk_dual_display_firmware_init_state' 'display/render/lvgl/dual_display_status_screen.c'
@@ -179,10 +180,10 @@ require_match 'record_typing_keypress_locked' 'display/firmware/dual_display_sta
 require_match 'complete display state' 'display/firmware/dual_display_state_adapter.c'
 require_match 'typing-return-idle' 'display/firmware/dual_display_state_adapter.c'
 require_match 'CONFIG_ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
-require_match 'CONFIG_ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
+require_match 'CONFIG_ZMK_DUAL_DISPLAY_ANIMATION_REFRESH_PERIOD_MS' 'display/firmware/dual_display_state_adapter.c'
 require_match 'DDL_SYNC' 'boards/arm/eyelash_sofle/eyelash_sofle.dtsi'
 require_match 'zmk_dual_display_firmware_apply_layer_index' 'display/firmware/dual_display_layer_sync_behavior.c'
-require_match 'K_WORK_DELAYABLE_DEFINE\(theme_refresh_work' 'display/firmware/dual_display_state_adapter.c'
+require_match 'K_WORK_DELAYABLE_DEFINE\(animation_refresh_work' 'display/firmware/dual_display_state_adapter.c'
 require_match 'zmk_dual_display_status_screen_next_frame_delay' 'display/firmware/dual_display_state_adapter.c'
 require_match 'ZMK_DUAL_DISPLAY_BATTERY_0_10_CHARGING' 'display/core/dual_display_state.h'
 require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING' 'display/core/dual_display_state.h'
@@ -190,7 +191,7 @@ require_match 'enum zmk_dual_display_activity_state activity' 'display/core/dual
 require_match 'zmk_dual_display_log_state_transition' 'display/core/dual_display_state.c'
 require_match 'mapped invalid battery percent' 'display/core/dual_display_state.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER' 'Kconfig'
-require_match 'ZMK_DUAL_DISPLAY_THEME_REFRESH_PERIOD_MS' 'Kconfig'
+require_match 'ZMK_DUAL_DISPLAY_ANIMATION_REFRESH_PERIOD_MS' 'Kconfig'
 require_match 'display/mock/lvgl/placeholder_renderer.c' 'CMakeLists.txt'
 require_match 'display/render/lvgl/viewport.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
@@ -218,14 +219,16 @@ require_match 'Display Engine Increment 6 Handoff' '.agentic/context/display-eng
 require_match 'display/render/theme/' '.agentic/context/display-engine-increment-6.md'
 require_match 'Display Engine Increment 8A Handoff' '.agentic/context/display-engine-increment-8A.md'
 require_match 'display/render/recipe/' '.agentic/context/display-engine-increment-8A.md'
-require_match 'output_frames/' 'display/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md'
+require_match 'Display Engine Increment 8B Handoff' '.agentic/context/display-engine-increment-8B.md'
+require_match 'themes/' '.agentic/context/display-engine-increment-8B.md'
+require_match 'output_frames/' 'themes/space/v1/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md'
 require_match 'Display Render Recipe Spec' 'docs/display-render-recipe-spec.md'
 require_match 'display/render/recipe/' 'docs/display-render-recipe-spec.md'
 require_match 'display/firmware/' 'display/README.md'
 require_match 'browser canvas app' 'sim/README.md'
 require_match 'local Python serial bridge' 'sim/README.md'
 require_match 'host C runner' 'sim/README.md'
-require_match 'zmk_dual_display_theme_context_observe_plan' 'sim/engine/dual_display_engine.c'
+require_match 'zmk_dual_display_animation_context_observe_plan' 'sim/engine/dual_display_engine.c'
 require_match 'zmk_dual_display_build_dual_plan_from_state' 'sim/engine/dual_display_engine.c'
 require_match 'dual display canvas simulator' 'sim/web/app.py'
 require_match 'SerialTailer' 'sim/web/app.py'
@@ -247,20 +250,19 @@ require_match 'docker-run' 'sim/web/Makefile'
 require_match 'build-base' 'sim/web/Dockerfile'
 require_no_match 'dual_display_sim|ASCII|terminal preview' 'sim/README.md'
 require_no_match 'sim-build|sim-clean' 'Makefile'
-require_match 'struct zmk_dual_display_theme_context' 'display/render/theme/dual_display_theme.h'
-require_match 'ZMK_DUAL_DISPLAY_THEME_PHASE_TYPING_PEAK' 'display/render/theme/dual_display_theme.h'
-require_match 'struct zmk_dual_display_theme_timing_profile' 'display/render/theme/dual_display_theme.h'
-require_match 'zmk_dual_display_theme_context_observe_plan_elapsed' 'display/render/theme/dual_display_theme.h'
+require_match 'struct zmk_dual_display_animation_context' 'display/render/animation/dual_display_animation.h'
+require_match 'ZMK_DUAL_DISPLAY_ANIMATION_PHASE_TYPING_PEAK' 'display/render/animation/dual_display_animation.h'
+require_match 'struct zmk_dual_display_animation_timing_profile' 'display/render/animation/dual_display_animation.h'
+require_match 'zmk_dual_display_animation_context_observe_plan_elapsed' 'display/render/animation/dual_display_animation.h'
 require_match 'timing_profile\.json' 'CMakeLists.txt'
-require_match 'generate_theme_timing\.py' 'CMakeLists.txt'
-require_match 'dual_display_theme_timing\.h' 'CMakeLists.txt'
+require_match 'generate_animation_timing\.py' 'CMakeLists.txt'
+require_match 'dual_display_animation_timing\.h' 'CMakeLists.txt'
 require_match 'wants_next_frame' 'display/render/lvgl/screen_renderer.h'
 require_match 'ZMK_DUAL_DISPLAY_SIM_LOG' 'display/log.h'
 require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
 require_match 'ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height' 'display/render/lvgl/viewport.c'
 require_match '\.y = bounds->x' 'display/render/lvgl/viewport.c'
 require_no_match 'display/mock' 'display/render/lvgl/dual_display_status_screen.c'
-require_match 'Temporary placeholder drawings' 'display/assets/README.md'
 require_match 'This subtree is temporary by design' 'display/mock/README.md'
 require_match 'code-organization-convention\.md' 'AGENTS.md'
 require_match 'durable product/core code and temporary/mock code' 'AGENTS.md'
@@ -276,7 +278,7 @@ require_match 'display-engine-increment-7\.md' '.agentic/context/repo-map.md'
 require_match 'Display Engine Increment 7 Handoff' '.agentic/context/display-engine-increment-7.md'
 require_match 'Timing Profile' 'docs/display-firmware-animation-flow.md'
 require_match 'Display Plan' 'docs/display-firmware-animation-flow.md'
-require_match 'Theme State / Animation State' 'docs/display-firmware-animation-flow.md'
+require_match 'Animation State' 'docs/display-firmware-animation-flow.md'
 require_match 'make sim-test' '.agentic/commands.md'
 require_match 'make sim-test' 'sim/README.md'
 
@@ -296,10 +298,10 @@ require_match 'eyelash_sofle_right_settings_reset' '.agentic/troubleshooting/spl
 require_match 'central-only reset is incomplete' '.agentic/troubleshooting/split-pairing.md'
 
 tmp_header="$(mktemp -t zmk-dual-display-theme-timing-XXXXXX.h)"
-python3 "$ROOT_DIR/scripts/agentic/generate_theme_timing.py" \
-  --input "$ROOT_DIR/display/render/theme/timing_profile.json" \
+python3 "$ROOT_DIR/scripts/agentic/generate_animation_timing.py" \
+  --input "$ROOT_DIR/themes/space/v1/timing_profile.json" \
   --output "$tmp_header"
-if ! grep -q 'ZMK_DUAL_DISPLAY_THEME_TYPING_PEAK_MS 18000U' "$tmp_header"; then
+if ! grep -q 'ZMK_DUAL_DISPLAY_ANIMATION_TYPING_PEAK_MS 18000U' "$tmp_header"; then
   fail "generated timing header did not contain expected peak threshold"
 fi
 rm -f "$tmp_header"

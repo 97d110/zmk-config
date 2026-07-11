@@ -11,15 +11,19 @@ without rewriting the core.
 - `display/render/lvgl/` owns the firmware LVGL adapter boundary and the ZMK
   `zmk_display_status_screen()` entry point, renderer contract, and viewport
   mapping.
-- `display/render/theme/` owns LVGL-free theme interpretation and renderer-
-  local animation state that can be shared by firmware and simulator builds.
-- `display/render/recipe/` is the planned LVGL-free shared composition layer.
-  It should consume Theme State snapshots and animation bounds, then emit
-  ordered renderer-neutral commands for firmware and simulator renderers.
+- `display/render/animation/` owns the generic, theme-independent animation
+  controller: typing phase, decay, frame clock, and the animation snapshot
+  shared by firmware and simulator builds.
+- `display/render/recipe/` owns the generic, theme-independent composition
+  instruction set and 1-bit compositor. It references assets by opaque integer
+  ID; the theme-specific planner that emits recipe commands lives under
+  `themes/<name>/<version>/`.
 - `display/firmware/` owns ZMK event/state adapters that translate firmware
   runtime sources into the durable `display/core/` state model.
-- `display/assets/` is reserved for durable asset registries and final or
-  long-lived placeholder assets after the generic engine is proven.
+
+Theme-specific content (scene-recipe planner, asset-ID vocabulary, timing
+profile, source assets, mock asset backend) lives under root
+`themes/<name>/<version>/` — e.g. `themes/space/v1/` — never under `display/`.
 
 ## State Terms
 
@@ -29,12 +33,13 @@ without rewriting the core.
 - Display Plan is the LVGL-free render input derived from Core State. It
   translates status-bar slots and carries theme-independent animation-section
   inputs.
-- Theme State / Animation State belongs under `display/render/theme/`. It may
+- Animation State belongs under `display/render/animation/`. It may
   react to Display Plans, but it must not mutate Core State.
-- Render Recipe belongs under the planned `display/render/recipe/` boundary. It
-  may reference stable asset IDs and composition commands, but not LVGL objects,
-  browser objects, package-relative file paths, or Core State fields.
-- Timing Profile values live in `display/render/theme/timing_profile.json` and
+- Render Recipe belongs under `display/render/recipe/`. It references assets by
+  opaque integer ID and carries composition commands, but never LVGL objects,
+  browser objects, package-relative file paths, or Core State fields. The planner
+  that produces it is theme-specific and lives under `themes/`.
+- Timing Profile values live in `themes/space/v1/timing_profile.json` and
   are generated into C-readable build output.
 
 ## Temporary Code
@@ -47,7 +52,7 @@ without rewriting the core.
 - Temporary code must not define the engine's public model. If a field or enum
   is needed by core planning, name it generically and keep it in `display/core/`.
   If a value describes theme timing, phase, or frame progression, keep it behind
-  `display/render/theme/`.
+  `display/render/animation/`.
 
 ## Deletion Rule
 

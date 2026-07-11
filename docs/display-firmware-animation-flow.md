@@ -7,11 +7,12 @@ sources into the Eyelash Sofle dual nice!view display pipeline:
 ZMK runtime -> Core State -> Display Plan -> Animation State -> renderer
 ```
 
-The current renderer still uses temporary placeholder visuals under
-`display/mock/`, but the state pipeline described here is durable firmware
-architecture. The display engine keeps firmware state capture, LVGL lifecycle,
-Display Plan construction, Animation State, and renderer implementation separate so
-the mock renderer can be replaced without rewriting the state flow.
+The renderer composites the active theme's render recipe into a 1-bit region
+buffer (`display/render/recipe/`) and blits it onto the nice!view canvas; the
+state pipeline described here is durable firmware architecture. The display
+engine keeps firmware state capture, LVGL lifecycle, Display Plan construction,
+Animation State, and renderer implementation separate so the renderer can evolve
+without rewriting the state flow.
 
 ## Logical Components
 
@@ -102,10 +103,10 @@ int zmk_dual_display_status_screen_update_from_state(
 `display/render/lvgl/screen_renderer.h` defines the renderer contract consumed
 by the LVGL status-screen boundary.
 
-The current implementation lives in `display/mock/lvgl/placeholder_renderer.c`.
-It draws placeholder status slots and animation scenes. A future real renderer
-or asset playback engine should implement the same contract without changing
-the firmware state adapter or core planner.
+The implementation lives in `display/render/lvgl/screen_renderer.c`. It draws the
+status slots and composites the theme's render recipe into the animation region.
+A future asset registry swaps in behind the `display/render/recipe/` asset-source
+interface without changing the firmware state adapter or core planner.
 
 The renderer contract returns a small render result. Firmware uses that result
 to schedule bounded redraws while renderer-local **Animation State / Animation
@@ -352,8 +353,9 @@ flowchart TD
         Contract["screen_renderer.h contract"]
         ThemeState["display/render/animation<br/>Animation State"]
         Timing["Timing Profile<br/>timing_profile.json -> generated C constants"]
-        Mock["display/mock/lvgl placeholder renderer"]
-        Future["future real asset / animation renderer"]
+        Recipe["themes/space/v1 scene_recipe + assets"]
+        Compositor["display/render/recipe compositor -> 1-bit region"]
+        ScreenRenderer["display/render/lvgl screen_renderer blit"]
     end
 
     Battery --> BatteryEvt
@@ -410,10 +412,10 @@ flowchart TD
     Contract -->|"wants next frame"| ThemeWork
     Contract --> ThemeState
     Timing --> ThemeState
-    ThemeState --> Mock
-    Contract -. "same contract later" .-> Future
-    Mock --> Viewport
-    Future --> Viewport
+    ThemeState --> Recipe
+    Recipe --> Compositor
+    Compositor --> ScreenRenderer
+    ScreenRenderer --> Viewport
 ```
 
 ## Logging Expectations

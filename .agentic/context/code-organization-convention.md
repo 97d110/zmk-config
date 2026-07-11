@@ -64,7 +64,8 @@ For the local dual nice!view display engine, generic reusable modules live under
 - theme-specific content — the scene-recipe planner, asset-ID vocabulary, timing
   profile, source assets, and any mock asset backend — belongs under
   `themes/<name>/<version>/` (e.g. `themes/space/v1/`), never under `display/`,
-- temporary placeholder rendering and throwaway geometry belong under
-  `display/mock/` until the recipe render path replaces it.
+- the only temporary code is a theme's mock asset backend
+  (`themes/<name>/<version>/mock/`), a placeholder until the real converted asset
+  registry exists; it stays deletable behind the recipe asset-source interface.
 - all durable and temporary display layout code must preserve the physical
   portrait contract: short top/bottom edges, long left/right edges.

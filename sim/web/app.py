@@ -609,6 +609,7 @@ PAGE = r"""<!doctype html>
       left: newTheme("left"),
       right: newTheme("right"),
     };
+    const recipeBySide = { left: null, right: null };
     const logs = [];
     let bridgeCursor = 0;
     let bridgeActive = true;
@@ -788,37 +789,29 @@ PAGE = r"""<!doctype html>
     }
 
     function drawScene(ctx, side) {
-      const s = state[side];
-      const t = theme[side];
-      const energy = t.energy || batteryEnergy(s.battery);
-      const charging = t.charging;
-      rect(ctx, 0, ANIM_Y, W, ANIM_H, false);
-      if (t.scene === "sleep") {
-        rect(ctx, 0, ANIM_Y, W, ANIM_H);
-        return;
-      }
-      if (t.scene === "link-error") {
-        for (let y = 0; y < ANIM_H; y += 4) {
-          const offset = (y / 4) % 2 === 0 ? 0 : 2;
-          for (let x = offset; x < W; x += 4) rect(ctx, x, ANIM_Y + y, 1, 1);
+      // Dark "space" background over the animation region.
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, ANIM_Y, W, ANIM_H);
+
+      const recipe = recipeBySide[side];
+      if (!recipe || !recipe.region) return;
+
+      // Draw the 1-bit region composited by the host compositor from the theme's
+      // recipe + mock assets. Lit bits are the light foreground, matching the
+      // firmware polarity (black background, white features).
+      const bytes = atob(recipe.region);
+      const rw = recipe.regionWidth;
+      const rh = recipe.regionHeight;
+      const stride = (rw + 7) >> 3;
+      ctx.fillStyle = "#eef5ef";
+      for (let ry = 0; ry < rh; ry++) {
+        for (let rx = 0; rx < rw; rx++) {
+          const byte = bytes.charCodeAt(ry * stride + (rx >> 3));
+          if ((byte >> (7 - (rx & 7))) & 1) {
+            ctx.fillRect(rx, ANIM_Y + ry, 1, 1);
+          }
         }
-        rect(ctx, Math.floor((W - 3) / 2), ANIM_Y + Math.floor((ANIM_H - 16) / 2), 3, 10);
-        rect(ctx, Math.floor((W - 3) / 2), ANIM_Y + Math.floor((ANIM_H - 16) / 2) + 13, 3, 3);
-        return;
       }
-      starfield(ctx, t, energy);
-      layerModifier(ctx, s.layer);
-      if (side === "right") secondary(ctx, t, energy);
-      else primary(ctx, t, energy);
-      if (charging) {
-        const x = W - 8;
-        const y = ANIM_Y + 4;
-        rect(ctx, x + 2, y, 2, 4);
-        rect(ctx, x, y + 4, 4, 1);
-        rect(ctx, x, y + 5, 2, 4);
-      }
-      const intensity = phaseIntensity(t.phase);
-      for (let i = 0; i < intensity; i++) rect(ctx, 3 + i * 4, ANIM_Y + 4, 2, 2);
     }
 
     function renderDisplay(side) {
@@ -915,6 +908,7 @@ PAGE = r"""<!doctype html>
       for (const side of ["left", "right"]) {
         Object.assign(state[side], snapshot[side].state || {});
         Object.assign(theme[side], snapshot[side].theme || {});
+        recipeBySide[side] = snapshot[side].recipe || null;
       }
       parseStats.snapshots += 1;
       lastKeyboardStateAt = performance.now();

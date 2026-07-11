@@ -12,7 +12,9 @@
 #include <display/core/dual_display_plan.h>
 #include <display/core/dual_display_state.h>
 #include <display/render/animation/dual_display_animation.h>
+#include <display/render/recipe/dual_display_compositor.h>
 #include <display/render/recipe/dual_display_recipe.h>
+#include <themes/space/v1/mock/mock_assets.h>
 #include <themes/space/v1/scene_recipe.h>
 
 #define HOST_TYPING_ACTIVE_MS 1100
@@ -118,7 +120,46 @@ static void observe(struct host_engine *engine, struct zmk_dual_display_dual_pla
                                                         elapsed_ms);
 }
 
-static void print_recipe_json(const struct zmk_dual_display_recipe *recipe) {
+static const char BASE64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static void print_base64(const uint8_t *data, size_t len) {
+    size_t i = 0;
+    for (; i + 3 <= len; i += 3) {
+        const uint32_t n = ((uint32_t)data[i] << 16) | ((uint32_t)data[i + 1] << 8) | data[i + 2];
+        putchar(BASE64[(n >> 18) & 63]);
+        putchar(BASE64[(n >> 12) & 63]);
+        putchar(BASE64[(n >> 6) & 63]);
+        putchar(BASE64[n & 63]);
+    }
+    if (len - i == 1) {
+        const uint32_t n = (uint32_t)data[i] << 16;
+        putchar(BASE64[(n >> 18) & 63]);
+        putchar(BASE64[(n >> 12) & 63]);
+        putchar('=');
+        putchar('=');
+    } else if (len - i == 2) {
+        const uint32_t n = ((uint32_t)data[i] << 16) | ((uint32_t)data[i + 1] << 8);
+        putchar(BASE64[(n >> 18) & 63]);
+        putchar(BASE64[(n >> 12) & 63]);
+        putchar(BASE64[(n >> 6) & 63]);
+        putchar('=');
+    }
+}
+
+static int region_set_pixels(const struct zmk_dual_display_region_buffer *buffer) {
+    int count = 0;
+    for (int y = 0; y < ZMK_DUAL_DISPLAY_REGION_HEIGHT; y++) {
+        for (int x = 0; x < ZMK_DUAL_DISPLAY_REGION_WIDTH; x++) {
+            if (zmk_dual_display_region_get(buffer, x, y)) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+static void print_recipe_json(const struct zmk_dual_display_recipe *recipe,
+                              const struct zmk_dual_display_region_buffer *buffer) {
     printf("\"recipe\":{\"commandCount\":%u,\"commands\":[", (unsigned int)recipe->command_count);
     for (uint8_t i = 0; i < recipe->command_count; i++) {
         const struct zmk_dual_display_recipe_command *command = &recipe->commands[i];
@@ -129,7 +170,10 @@ static void print_recipe_json(const struct zmk_dual_display_recipe *recipe) {
                (unsigned int)command->point_set, (unsigned int)command->frame,
                command->clip ? "true" : "false", (int)command->x, (int)command->y);
     }
-    printf("]}");
+    printf("],\"regionWidth\":%d,\"regionHeight\":%d,\"regionSetPixels\":%d,\"region\":\"",
+           ZMK_DUAL_DISPLAY_REGION_WIDTH, ZMK_DUAL_DISPLAY_REGION_HEIGHT, region_set_pixels(buffer));
+    print_base64(buffer->bits, sizeof(buffer->bits));
+    printf("\"}");
 }
 
 static void print_side_json(const char *key, const struct zmk_dual_display_state *state,
@@ -137,6 +181,9 @@ static void print_side_json(const char *key, const struct zmk_dual_display_state
                             const struct zmk_dual_display_animation_plan *animation) {
     struct zmk_dual_display_recipe recipe;
     zmk_dual_display_space_v1_build_recipe(theme, animation, &recipe);
+    const struct zmk_dual_display_asset_source assets = zmk_dual_display_space_v1_mock_asset_source();
+    struct zmk_dual_display_region_buffer buffer;
+    zmk_dual_display_compositor_render(&recipe, &assets, &buffer);
 
     printf("\"%s\":{\"state\":{\"side\":\"%s\",\"battery\":\"%s\",\"activity\":\"%s\","
            "\"transport\":\"%s\",\"split\":\"%s\",\"layer\":\"%s\"},"
@@ -155,7 +202,7 @@ static void print_side_json(const char *key, const struct zmk_dual_display_state
            (unsigned int)theme->decay_elapsed_ms, (unsigned int)theme->idle_elapsed_ms,
            (unsigned int)theme->loop_elapsed_ms, theme->wants_next_frame ? "true" : "false",
            (unsigned int)theme->next_delay_ms);
-    print_recipe_json(&recipe);
+    print_recipe_json(&recipe, &buffer);
     printf("}");
 }
 

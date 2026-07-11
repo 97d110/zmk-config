@@ -29,7 +29,9 @@ ENGINE_SOURCES = [
     ROOT_DIR / "display" / "core" / "dual_display_plan.c",
     ROOT_DIR / "display" / "render" / "animation" / "dual_display_animation.c",
     ROOT_DIR / "display" / "render" / "recipe" / "dual_display_recipe.c",
+    ROOT_DIR / "display" / "render" / "recipe" / "dual_display_compositor.c",
     ROOT_DIR / "themes" / "space" / "v1" / "scene_recipe.c",
+    ROOT_DIR / "themes" / "space" / "v1" / "mock" / "mock_assets.c",
 ]
 
 

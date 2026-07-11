@@ -80,8 +80,7 @@ lv_obj_t *zmk_display_status_screen(void) {
     const enum zmk_dual_display_side side = current_firmware_side();
     struct zmk_dual_display_state state;
 
-    LOG_INF("creating dual display status screen: mock_renderer=%d nice_view_widget_status=%d",
-            IS_ENABLED(CONFIG_ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER),
+    LOG_INF("creating dual display status screen: nice_view_widget_status=%d",
             IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_STATUS));
     zmk_dual_display_firmware_init_state(side, &state);
     LOG_INF("dual display firmware state: side=%s role=%d battery=%d activity=%d transport=%d split=%d layer=%d",

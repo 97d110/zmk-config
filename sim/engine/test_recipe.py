@@ -35,6 +35,15 @@ def draw_sprites(snapshot: dict, side: str = "left") -> int:
     return count_kind(snapshot, "draw_sprite", side)
 
 
+def region_pixels(snapshot: dict, side: str = "left") -> int:
+    return recipe(snapshot, side)["regionSetPixels"]
+
+
+def region_dims(snapshot: dict, side: str = "left") -> tuple:
+    r = recipe(snapshot, side)
+    return (r["regionWidth"], r["regionHeight"])
+
+
 def phase(snapshot: dict, side: str = "left") -> str:
     return snapshot[side]["theme"]["phase"]  # type: ignore[index,return-value]
 
@@ -70,6 +79,12 @@ def run_tests() -> None:
         check(count_kind(idle, "draw_sprite_masked", "right") == 0, "right omits the actor", idle)
         check(count_kind(idle, "apply_clearance_mask", "right") == 0, "right omits clearance", idle)
 
+        # The compositor + mock assets render the recipe into a 68x146 1-bit region.
+        check(region_dims(idle) == (68, 146), "region is 68x146", idle)
+        check(region_pixels(idle) > 0, "idle composites a non-empty region", idle)
+        check(0 < region_pixels(idle, "right") < region_pixels(idle),
+              "right (no actor) composites fewer lit pixels than left", idle)
+
         # Typing effects scale with phase.
         light = engine.command("key")
         check(phase(light) == "typing-light", "expected typing-light after a keypress", light)
@@ -87,6 +102,8 @@ def run_tests() -> None:
         high = test_timing.sustain_typing(engine, 7000)
         check(phase(high) == "typing-high", "expected typing-high", high)
         check(draw_sprites(high) == 8, "typing-high => 6 streaks + 2 twinkles", high)
+        check(region_pixels(high) > region_pixels(idle), "typing effects add lit pixels vs idle",
+              high)
 
         peak = test_timing.sustain_typing(engine, 6000)
         check(phase(peak) == "typing-peak", "expected typing-peak", peak)
@@ -106,11 +123,13 @@ def run_tests() -> None:
         check(phase(slept) == "sleep", "expected visual display-sleep", slept)
         check(recipe(slept)["commandCount"] == 1 and kinds(slept) == ["clear_region"],
               "visual sleep => clear-only recipe", slept)
+        check(region_pixels(slept) == 0, "visual sleep composites a black region", slept)
 
         # ZMK global sleep (scene sleep) => frozen black too.
         gsleep = engine.command("sleep left 1")
         check(recipe(gsleep)["commandCount"] == 1 and kinds(gsleep) == ["clear_region"],
               "global sleep => clear-only recipe", gsleep)
+        check(region_pixels(gsleep) == 0, "global sleep composites a black region", gsleep)
     finally:
         engine.close()
 

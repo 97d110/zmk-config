@@ -44,19 +44,18 @@ profile, source assets, mock asset backend) lives under root
 
 ## Temporary Code
 
-- `display/mock/` owns proof-of-concept drawing, mock icons, hard-coded
-  placeholder geometry, and throwaway asset names.
-- Temporary code may be visually crude and hard-coded, but it must still follow
-  the portrait top-to-bottom display contract and logging convention. The top
-  and bottom edges are short, and the left and right edges are long.
-- Temporary code must not define the engine's public model. If a field or enum
-  is needed by core planning, name it generically and keep it in `display/core/`.
-  If a value describes theme timing, phase, or frame progression, keep it behind
+- The only temporary code is a theme's mock asset backend
+  (`themes/<name>/<version>/mock/`): hand-authored placeholder 1-bit sprites that
+  stand in until the real converted asset registry exists (roadmap Inc 9).
+- It must not define the engine's public model. If a field or enum is needed by
+  core planning, name it generically and keep it in `display/core/`. If a value
+  describes animation timing, phase, or frame progression, keep it in
   `display/render/animation/`.
 
 ## Deletion Rule
 
-Before moving to real assets or animation playback, the implementation should
-be able to delete `display/mock/` and replace its implementation of the LVGL
-renderer contract with a real renderer. If that is not possible, mock-only logic
-has leaked into durable code and should be moved back behind the mock boundary.
+The mock asset backend is deletable behind the `display/render/recipe/`
+asset-source interface: swapping in the generated registry must not change the
+compositor, the recipe command model, or any theme planner. If a change would,
+mock-only logic has leaked into durable code and should move back behind the
+asset-source boundary.

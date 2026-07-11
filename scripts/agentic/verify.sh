@@ -26,6 +26,7 @@ required_files=(
   ".agentic/context/display-engine-increment-8A.md"
   ".agentic/context/display-engine-increment-8B.md"
   ".agentic/context/display-engine-increment-8C.md"
+  ".agentic/context/display-engine-increment-8D.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -49,11 +50,9 @@ required_files=(
   "display/firmware/dual_display_state_adapter.c"
   "display/firmware/dual_display_state_adapter.h"
   "display/log.h"
-  "display/mock/README.md"
-  "display/mock/lvgl/placeholder_renderer.c"
-  "display/mock/lvgl/placeholder_renderer.h"
   "display/render/lvgl/README.md"
   "display/render/lvgl/dual_display_status_screen.h"
+  "display/render/lvgl/screen_renderer.c"
   "display/render/lvgl/screen_renderer.h"
   "display/render/lvgl/dual_display_status_screen.c"
   "display/render/lvgl/viewport.c"
@@ -62,9 +61,14 @@ required_files=(
   "display/render/animation/dual_display_animation.c"
   "display/render/animation/dual_display_animation.h"
   "display/render/recipe/README.md"
+  "display/render/recipe/dual_display_asset_source.h"
+  "display/render/recipe/dual_display_compositor.c"
+  "display/render/recipe/dual_display_compositor.h"
   "display/render/recipe/dual_display_recipe.c"
   "display/render/recipe/dual_display_recipe.h"
   "themes/space/v1/assets.h"
+  "themes/space/v1/mock/mock_assets.c"
+  "themes/space/v1/mock/mock_assets.h"
   "themes/space/v1/scene_recipe.c"
   "themes/space/v1/scene_recipe.h"
   "themes/space/v1/timing_profile.json"
@@ -198,14 +202,13 @@ require_match 'ZMK_DUAL_DISPLAY_ACTIVITY_TYPING' 'display/core/dual_display_stat
 require_match 'enum zmk_dual_display_activity_state activity' 'display/core/dual_display_plan.h'
 require_match 'zmk_dual_display_log_state_transition' 'display/core/dual_display_state.c'
 require_match 'mapped invalid battery percent' 'display/core/dual_display_state.c'
-require_match 'ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER' 'Kconfig'
 require_match 'ZMK_DUAL_DISPLAY_ANIMATION_REFRESH_PERIOD_MS' 'Kconfig'
-require_match 'display/mock/lvgl/placeholder_renderer.c' 'CMakeLists.txt'
+require_match 'display/render/lvgl/screen_renderer.c' 'CMakeLists.txt'
 require_match 'display/render/lvgl/viewport.c' 'CMakeLists.txt'
 require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/dual_display_status_screen.c'
-require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/mock/lvgl/placeholder_renderer.c'
-require_match 'lv_canvas_draw_rect' 'display/mock/lvgl/placeholder_renderer.c'
-require_match 'add_slash_overlay' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'zmk_dual_display_lvgl_render_screen_plan' 'display/render/lvgl/screen_renderer.c'
+require_match 'lv_canvas_draw_rect' 'display/render/lvgl/screen_renderer.c'
+require_match 'add_slash_overlay' 'display/render/lvgl/screen_renderer.c'
 require_match 'enum zmk_dual_display_scene_kind' 'display/core/dual_display_plan.h'
 require_match 'ZMK_DUAL_DISPLAY_ENERGY_HIGH' 'display/core/dual_display_plan.h'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_SLEEP' 'display/core/dual_display_plan.c'
@@ -213,7 +216,6 @@ require_match 'ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR' 'display/core/dual_display_pla
 require_match 'select_scene_kind' 'display/core/dual_display_plan.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_SLEEP' 'display/core/dual_display_plan.c'
 require_match 'ZMK_DUAL_DISPLAY_SCENE_LINK_ERROR' 'display/core/dual_display_plan.c'
-require_match 'SCENE_SLEEP' 'display/mock/lvgl/placeholder_renderer.c'
 require_match 'make sim' '.agentic/commands.md'
 require_match 'make sim-web-docker' '.agentic/commands.md'
 require_match 'Display Engine Increment 4 Handoff' '.agentic/context/display-engine-increment-4.md'
@@ -230,6 +232,7 @@ require_match 'display/render/recipe/' '.agentic/context/display-engine-incremen
 require_match 'Display Engine Increment 8B Handoff' '.agentic/context/display-engine-increment-8B.md'
 require_match 'themes/' '.agentic/context/display-engine-increment-8B.md'
 require_match 'Display Engine Increment 8C Handoff' '.agentic/context/display-engine-increment-8C.md'
+require_match 'Display Engine Increment 8D Handoff' '.agentic/context/display-engine-increment-8D.md'
 require_match 'output_frames/' 'themes/space/v1/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md'
 require_match 'Display Render Recipe Spec' 'docs/display-render-recipe-spec.md'
 require_match 'display/render/recipe/' 'docs/display-render-recipe-spec.md'
@@ -272,7 +275,6 @@ require_match 'zmk_dual_display_lvgl_map_rect' 'display/render/lvgl/viewport.c'
 require_match 'ZMK_DUAL_DISPLAY_HEIGHT - bounds->y - bounds->height' 'display/render/lvgl/viewport.c'
 require_match '\.y = bounds->x' 'display/render/lvgl/viewport.c'
 require_no_match 'display/mock' 'display/render/lvgl/dual_display_status_screen.c'
-require_match 'This subtree is temporary by design' 'display/mock/README.md'
 require_match 'code-organization-convention\.md' 'AGENTS.md'
 require_match 'durable product/core code and temporary/mock code' 'AGENTS.md'
 require_match 'Code organization convention for increments 1-7' '.codex/zmk_dual_shield_animation_tech_spec_prompt_v3.md'
@@ -312,8 +314,16 @@ require_match 'ZMK_DUAL_DISPLAY_RECIPE_MAX_COMMANDS' 'display/render/recipe/dual
 require_match 'zmk_dual_display_recipe_command_kind_name' 'display/render/recipe/dual_display_recipe.c'
 require_match 'zmk_dual_display_space_v1_build_recipe' 'themes/space/v1/scene_recipe.c'
 require_match 'zmk_dual_display_space_v1_build_recipe' 'sim/engine/dual_display_engine.c'
-require_match 'zmk_dual_display_space_v1_build_recipe' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'zmk_dual_display_space_v1_build_recipe' 'display/render/lvgl/screen_renderer.c'
 require_match 'commandCount' 'sim/engine/dual_display_engine.c'
+require_match 'display/render/recipe/dual_display_compositor.c' 'CMakeLists.txt'
+require_match 'themes/space/v1/mock/mock_assets.c' 'CMakeLists.txt'
+require_match 'zmk_dual_display_compositor_render' 'display/render/recipe/dual_display_compositor.c'
+require_match 'struct zmk_dual_display_asset_source' 'display/render/recipe/dual_display_asset_source.h'
+require_match 'zmk_dual_display_space_v1_mock_asset_source' 'themes/space/v1/mock/mock_assets.c'
+require_match 'zmk_dual_display_compositor_render' 'display/render/lvgl/screen_renderer.c'
+require_match 'blit_region' 'display/render/lvgl/screen_renderer.c'
+require_match 'regionSetPixels' 'sim/engine/dual_display_engine.c'
 
 tmp_header="$(mktemp -t zmk-dual-display-theme-timing-XXXXXX.h)"
 python3 "$ROOT_DIR/scripts/agentic/generate_animation_timing.py" \

@@ -17,15 +17,6 @@ config ZMK_DUAL_DISPLAY_SCENE_ENGINE
 
 if ZMK_DUAL_DISPLAY_SCENE_ENGINE
 
-config ZMK_DUAL_DISPLAY_SCENE_ENGINE_MOCK_RENDERER
-    bool "Use temporary placeholder LVGL renderer"
-    default y
-    help
-      Selects the mock LVGL renderer while the durable scene renderer and
-      asset pipeline are still being built. The ZMK display entry point uses a
-      stable render contract so this temporary implementation can be removed
-      without changing core planning code.
-
 config ZMK_DUAL_DISPLAY_TYPING_CHECK_PERIOD_MS
     int "Typing activity check period in milliseconds"
     default 1000

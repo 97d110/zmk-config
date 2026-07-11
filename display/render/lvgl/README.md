@@ -20,17 +20,17 @@ Renderer code must preserve the portrait display contract from `display/core/`:
 top and bottom edges are short, left and right edges are long, and the status
 bar belongs on the narrow top edge.
 
-During increment 1, the `screen_renderer.h` contract is implemented by
-`display/mock/lvgl/` because the visuals are temporary placeholders. Future
-increments should replace that provider with real LVGL rendering or animation
-playback while keeping the screen-entry logic here.
+`screen_renderer.c` implements the `screen_renderer.h` contract: it draws the
+status bar from the Display Plan and renders the animation region by compositing
+the active theme's render recipe (`display/render/recipe/`) into a 1-bit region
+buffer, then blitting it onto the nice!view canvas.
 
-Theme interpretation lives in `display/render/animation/` so the simulator and
+Animation State lives in `display/render/animation/` so the simulator and
 firmware share the same phase and tick behavior without making that state part
 of `display/core/`.
 
-This directory should not accumulate throwaway placeholder geometry. If a shape
-exists only to prove layout, put it under `display/mock/`.
+The only temporary rendering input is a theme's mock asset backend under
+`themes/<name>/<version>/mock/`; this directory itself stays durable.
 
-The portrait-to-panel coordinate mapping belongs here, not in mock code,
-because it is required by any renderer that targets the nice!view framebuffer.
+The portrait-to-panel coordinate mapping belongs here because it is required by
+any renderer that targets the nice!view framebuffer.

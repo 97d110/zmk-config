@@ -59,13 +59,18 @@
   Handoff note for the generic recipe command model (`display/render/recipe/`)
   and the space/v1 scene-recipe planner (`themes/space/v1/`), emitted as data in
   the sim and logged on firmware (not yet rendered).
+- `.agentic/context/display-engine-increment-8D.md`
+  Handoff note for the generic 1-bit compositor + asset-source interface, the
+  space/v1 mock asset backend, and rendering the recipe on firmware and in the
+  sim; retires the `display/mock/` placeholder renderer.
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges
   are long.
 - `display/render/lvgl/`
   Durable LVGL firmware adapter boundary, renderer contract, and viewport
-  mapping. The current renderer contract is implemented by `display/mock/`.
+  mapping. The contract is implemented by `display/render/lvgl/screen_renderer.c`,
+  which composites the active theme's recipe into the animation region.
 - `display/render/animation/`
   Durable generic, theme-independent animation controller shared by firmware and
   simulator builds. Owns renderer-local frame ticks, typing phase, decay state,
@@ -81,9 +86,6 @@
   `display/core/` state and queues refreshes on the ZMK display work queue.
   It also runs the bounded animation refresh loop while renderer-local state
   wants another frame.
-- `display/mock/`
-  Temporary proof-of-concept placeholder LVGL rendering. It must preserve the
-  portrait display contract and should be easy to replace or delete.
 - `themes/`
   Root home for theme-specific content, versioned per theme (e.g.
   `themes/space/v1/`). Holds each theme's scene-recipe planner, asset-ID

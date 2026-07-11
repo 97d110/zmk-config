@@ -29,6 +29,7 @@ sim:
 
 sim-test:
 	@python3 sim/engine/test_timing.py
+	@python3 sim/engine/test_recipe.py
 
 sim-web:
 	@python3 sim/web/app.py

@@ -25,6 +25,7 @@ required_files=(
   ".agentic/context/display-engine-increment-7.md"
   ".agentic/context/display-engine-increment-8A.md"
   ".agentic/context/display-engine-increment-8B.md"
+  ".agentic/context/display-engine-increment-8C.md"
   ".agentic/troubleshooting/split-pairing.md"
   "build.yaml"
   "CMakeLists.txt"
@@ -60,12 +61,19 @@ required_files=(
   "display/render/animation/README.md"
   "display/render/animation/dual_display_animation.c"
   "display/render/animation/dual_display_animation.h"
+  "display/render/recipe/README.md"
+  "display/render/recipe/dual_display_recipe.c"
+  "display/render/recipe/dual_display_recipe.h"
+  "themes/space/v1/assets.h"
+  "themes/space/v1/scene_recipe.c"
+  "themes/space/v1/scene_recipe.h"
   "themes/space/v1/timing_profile.json"
   "dts/bindings/behaviors/zmk,behavior-dual-display-layer-sync.yaml"
   "scripts/agentic/generate_animation_timing.py"
   "sim/README.md"
   "sim/engine/dual_display_engine.c"
   "sim/engine/test_timing.py"
+  "sim/engine/test_recipe.py"
   "sim/web/app.py"
   "sim/web/Dockerfile"
   "sim/web/Makefile"
@@ -221,6 +229,7 @@ require_match 'Display Engine Increment 8A Handoff' '.agentic/context/display-en
 require_match 'display/render/recipe/' '.agentic/context/display-engine-increment-8A.md'
 require_match 'Display Engine Increment 8B Handoff' '.agentic/context/display-engine-increment-8B.md'
 require_match 'themes/' '.agentic/context/display-engine-increment-8B.md'
+require_match 'Display Engine Increment 8C Handoff' '.agentic/context/display-engine-increment-8C.md'
 require_match 'output_frames/' 'themes/space/v1/assets/niceview_asteroid_agent_package_v13/docs/ASSET_ANALYSIS.md'
 require_match 'Display Render Recipe Spec' 'docs/display-render-recipe-spec.md'
 require_match 'display/render/recipe/' 'docs/display-render-recipe-spec.md'
@@ -297,6 +306,15 @@ require_match 'USB logging is enabled only through dedicated debug artifacts' 'A
 require_match 'eyelash_sofle_right_settings_reset' '.agentic/troubleshooting/split-pairing.md'
 require_match 'central-only reset is incomplete' '.agentic/troubleshooting/split-pairing.md'
 
+require_match 'display/render/recipe/dual_display_recipe.c' 'CMakeLists.txt'
+require_match 'themes/space/v1/scene_recipe.c' 'CMakeLists.txt'
+require_match 'ZMK_DUAL_DISPLAY_RECIPE_MAX_COMMANDS' 'display/render/recipe/dual_display_recipe.h'
+require_match 'zmk_dual_display_recipe_command_kind_name' 'display/render/recipe/dual_display_recipe.c'
+require_match 'zmk_dual_display_space_v1_build_recipe' 'themes/space/v1/scene_recipe.c'
+require_match 'zmk_dual_display_space_v1_build_recipe' 'sim/engine/dual_display_engine.c'
+require_match 'zmk_dual_display_space_v1_build_recipe' 'display/mock/lvgl/placeholder_renderer.c'
+require_match 'commandCount' 'sim/engine/dual_display_engine.c'
+
 tmp_header="$(mktemp -t zmk-dual-display-theme-timing-XXXXXX.h)"
 python3 "$ROOT_DIR/scripts/agentic/generate_animation_timing.py" \
   --input "$ROOT_DIR/themes/space/v1/timing_profile.json" \
@@ -307,5 +325,6 @@ fi
 rm -f "$tmp_header"
 
 python3 "$ROOT_DIR/sim/engine/test_timing.py" >/dev/null
+python3 "$ROOT_DIR/sim/engine/test_recipe.py" >/dev/null
 
 printf 'verify: ok\n'

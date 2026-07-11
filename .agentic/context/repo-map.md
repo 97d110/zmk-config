@@ -55,6 +55,10 @@
   Handoff note for the structural refactor: renamed the generic animation
   controller theme->animation and moved theme-specific content (assets, timing
   profile) to the root `themes/` tree.
+- `.agentic/context/display-engine-increment-8C.md`
+  Handoff note for the generic recipe command model (`display/render/recipe/`)
+  and the space/v1 scene-recipe planner (`themes/space/v1/`), emitted as data in
+  the sim and logged on firmware (not yet rendered).
 - `display/core/`
   Durable LVGL-free display state, mapping, planning types, and policy. The
   display contract is portrait: top/bottom edges are short, left/right edges

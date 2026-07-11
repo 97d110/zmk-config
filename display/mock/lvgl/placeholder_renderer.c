@@ -6,8 +6,10 @@
 #include <display/mock/lvgl/placeholder_renderer.h>
 
 #include <display/log.h>
-#include <display/render/lvgl/viewport.h>
 #include <display/render/animation/dual_display_animation.h>
+#include <display/render/lvgl/viewport.h>
+#include <display/render/recipe/dual_display_recipe.h>
+#include <themes/space/v1/scene_recipe.h>
 
 static lv_color_t canvas_buf[ZMK_DUAL_DISPLAY_LONG_EDGE * ZMK_DUAL_DISPLAY_SHORT_EDGE];
 static struct zmk_dual_display_animation_context theme_contexts[2];
@@ -620,6 +622,42 @@ static void render_theme_phase_marker(lv_obj_t *screen,
     }
 }
 
+/*
+ * Build the shared render recipe and log a one-line summary on scene/phase
+ * change. This exercises the durable planner on firmware for diagnostics; the
+ * placeholder geometry below is unchanged. The call disappears with this mock in
+ * 8D, when the compositor renders the recipe directly.
+ */
+static void log_recipe_summary_once(const struct zmk_dual_display_screen_plan *screen_plan,
+                                    const struct zmk_dual_display_animation_snapshot *theme) {
+    static int last_scene[2] = {-1, -1};
+    static int last_phase[2] = {-1, -1};
+    const uint8_t idx = screen_plan->side == ZMK_DUAL_DISPLAY_SIDE_RIGHT ? 1 : 0;
+
+    if ((int)theme->scene == last_scene[idx] && (int)theme->phase == last_phase[idx]) {
+        return;
+    }
+    last_scene[idx] = (int)theme->scene;
+    last_phase[idx] = (int)theme->phase;
+
+    struct zmk_dual_display_recipe recipe;
+    zmk_dual_display_space_v1_build_recipe(theme, &screen_plan->animation, &recipe);
+
+    zmk_dual_display_asset_id_t actor = ZMK_DUAL_DISPLAY_ASSET_NONE;
+    for (uint8_t i = 0; i < recipe.command_count; i++) {
+        if (recipe.commands[i].kind == ZMK_DUAL_DISPLAY_RECIPE_DRAW_SPRITE_MASKED) {
+            actor = recipe.commands[i].asset;
+            break;
+        }
+    }
+
+    ZMK_DUAL_DISPLAY_LOG_DBG("recipe built: side=%s scene=%s phase=%s commands=%u actor_asset=%u",
+                             zmk_dual_display_side_name(theme->side),
+                             zmk_dual_display_animation_scene_name(theme->scene),
+                             zmk_dual_display_animation_phase_name(theme->phase),
+                             (unsigned int)recipe.command_count, (unsigned int)actor);
+}
+
 static struct zmk_dual_display_render_result render_animation_region(
     lv_obj_t *screen, const struct zmk_dual_display_screen_plan *screen_plan) {
     struct zmk_dual_display_animation_context *context = theme_context_for_side(screen_plan->side);
@@ -627,6 +665,8 @@ static struct zmk_dual_display_render_result render_animation_region(
     const struct zmk_dual_display_animation_snapshot theme =
         zmk_dual_display_animation_context_snapshot(context);
     const struct zmk_dual_display_animation_plan *plan = &screen_plan->animation;
+
+    log_recipe_summary_once(screen_plan, &theme);
 
     switch (theme.scene) {
     case ZMK_DUAL_DISPLAY_SCENE_SLEEP:

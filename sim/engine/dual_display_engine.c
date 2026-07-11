@@ -12,6 +12,8 @@
 #include <display/core/dual_display_plan.h>
 #include <display/core/dual_display_state.h>
 #include <display/render/animation/dual_display_animation.h>
+#include <display/render/recipe/dual_display_recipe.h>
+#include <themes/space/v1/scene_recipe.h>
 
 #define HOST_TYPING_ACTIVE_MS 1100
 
@@ -116,14 +118,32 @@ static void observe(struct host_engine *engine, struct zmk_dual_display_dual_pla
                                                         elapsed_ms);
 }
 
+static void print_recipe_json(const struct zmk_dual_display_recipe *recipe) {
+    printf("\"recipe\":{\"commandCount\":%u,\"commands\":[", (unsigned int)recipe->command_count);
+    for (uint8_t i = 0; i < recipe->command_count; i++) {
+        const struct zmk_dual_display_recipe_command *command = &recipe->commands[i];
+        printf("%s{\"kind\":\"%s\",\"blend\":\"%s\",\"asset\":%u,\"pointSet\":%u,\"frame\":%u,"
+               "\"clip\":%s,\"x\":%d,\"y\":%d}",
+               i == 0 ? "" : ",", zmk_dual_display_recipe_command_kind_name(command->kind),
+               zmk_dual_display_recipe_blend_name(command->blend), (unsigned int)command->asset,
+               (unsigned int)command->point_set, (unsigned int)command->frame,
+               command->clip ? "true" : "false", (int)command->x, (int)command->y);
+    }
+    printf("]}");
+}
+
 static void print_side_json(const char *key, const struct zmk_dual_display_state *state,
-                            const struct zmk_dual_display_animation_snapshot *theme) {
+                            const struct zmk_dual_display_animation_snapshot *theme,
+                            const struct zmk_dual_display_animation_plan *animation) {
+    struct zmk_dual_display_recipe recipe;
+    zmk_dual_display_space_v1_build_recipe(theme, animation, &recipe);
+
     printf("\"%s\":{\"state\":{\"side\":\"%s\",\"battery\":\"%s\",\"activity\":\"%s\","
            "\"transport\":\"%s\",\"split\":\"%s\",\"layer\":\"%s\"},"
            "\"theme\":{\"variant\":\"%s\",\"scene\":\"%s\",\"phase\":\"%s\","
            "\"energy\":\"%s\",\"charging\":%s,\"frameTick\":%u,\"typingElapsedMs\":%u,"
            "\"decayElapsedMs\":%u,\"idleElapsedMs\":%u,\"loopElapsedMs\":%u,"
-           "\"wantsNextFrame\":%s,\"nextDelayMs\":%u}}",
+           "\"wantsNextFrame\":%s,\"nextDelayMs\":%u},",
            key, zmk_dual_display_side_name(state->side), battery_name(state->battery),
            activity_name(state->activity), transport_name(state->transport),
            split_name(state->split_link), zmk_dual_display_animation_layer_name(state->layer),
@@ -135,6 +155,8 @@ static void print_side_json(const char *key, const struct zmk_dual_display_state
            (unsigned int)theme->decay_elapsed_ms, (unsigned int)theme->idle_elapsed_ms,
            (unsigned int)theme->loop_elapsed_ms, theme->wants_next_frame ? "true" : "false",
            (unsigned int)theme->next_delay_ms);
+    print_recipe_json(&recipe);
+    printf("}");
 }
 
 static void print_snapshot(struct host_engine *engine, uint32_t elapsed_ms) {
@@ -149,9 +171,9 @@ static void print_snapshot(struct host_engine *engine, uint32_t elapsed_ms) {
         zmk_dual_display_animation_context_snapshot(&engine->right_theme);
 
     printf("{\"nowMs\":%u,", (unsigned int)engine->now_ms);
-    print_side_json("left", &engine->left, &left_theme);
+    print_side_json("left", &engine->left, &left_theme, &plan.left.animation);
     printf(",");
-    print_side_json("right", &engine->right, &right_theme);
+    print_side_json("right", &engine->right, &right_theme, &plan.right.animation);
     printf("}\n");
     fflush(stdout);
 }
